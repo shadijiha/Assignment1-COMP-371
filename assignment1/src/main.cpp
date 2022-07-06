@@ -12,6 +12,56 @@ static void handleErrors(GLenum source, GLenum type, GLuint id,
 	GLenum severity, GLsizei length, const GLchar* message, const void* userParam);
 
 void listenToEvents(GLFWwindow* window) {
+
+	glfwSetKeyCallback(window, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
+		WindowUserData* data = (WindowUserData*)glfwGetWindowUserPointer(window);
+		Camera& camera = *data->camera;
+		glm::vec3 camPos = camera.getPosition();
+
+
+		switch (key) {
+		case GLFW_KEY_D:
+			camPos.x += 0.05;
+			camera.setPosition(camPos);
+			break;
+
+		case GLFW_KEY_A:
+			camPos.x -= 0.05;
+			camera.setPosition(camPos);
+			break;
+		case GLFW_KEY_W:
+			camPos.z -= 0.05;
+			camera.setPosition(camPos);
+			break;
+
+		case GLFW_KEY_S:
+			camPos.z += 0.05;
+			camera.setPosition(camPos);
+			break;
+
+		case GLFW_KEY_UP:
+			camPos.y += 0.05;
+			camera.setPosition(camPos);
+			break;
+		case GLFW_KEY_DOWN:
+			camPos.y -= 0.05;
+			camera.setPosition(camPos);
+			break;
+
+		// Rendering mode
+		case GLFW_KEY_P:
+			Renderer::setDefaultRenderering(GL_POINTS);
+			break;
+
+		case GLFW_KEY_L:
+			Renderer::setDefaultRenderering(GL_LINE_LOOP);
+			break;
+
+		case GLFW_KEY_T:
+			Renderer::setDefaultRenderering(GL_TRIANGLES);
+			break;
+		}
+	});
 }
 
 int main(int argc, const char** argv) {
@@ -45,8 +95,14 @@ int main(int argc, const char** argv) {
 	// Get and compile shader
 	Camera camera(window_width, window_height);
 	Shader shader("shaders/shader.glsl");
-	
-	camera.setPosition({ 1, 0, 2.3 });
+
+	WindowUserData data;	// Because we need this to get the camera in events callbacks
+	data.camera = &camera;
+	data.width = window_width;
+	data.height = window_height;
+	glfwSetWindowUserPointer(window, &data);
+
+	camera.setPosition({ 0, 2, 2.3 });
 	// Main loop
 	glClearColor(0.05, 0.05, 0.2, 1.0);
 
@@ -56,6 +112,7 @@ int main(int argc, const char** argv) {
 	glDebugMessageCallback(handleErrors, 0);
 
 	// Default renderer settings
+	Renderer::init();
 	Renderer::setCamera(&camera);
 	Renderer::setDefaultShader(&shader);
 

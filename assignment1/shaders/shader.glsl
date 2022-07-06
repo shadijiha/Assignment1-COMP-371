@@ -34,7 +34,7 @@ uniform vec3 u_LightPosition;
 void main()
 {
     vec3 lightColor = vec3(1.0, 1.0, 1.0);
-    float ambientStrength = 0.3;
+    float ambientStrength = 0.5;
     vec3 ambient = ambientStrength * lightColor;
 
     vec4 norm = normalize(v_Normal);
