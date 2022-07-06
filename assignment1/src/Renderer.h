@@ -20,7 +20,8 @@ public:
 						 const glm::vec3& rot = {0, 0, 0},
 						 const glm::vec3& scale = { 1, 1, 1 }, 
 						 const glm::vec4& color = {1, 1, 1, 1},
-						 Shader& shader = *Renderer::shader);
+						 Shader& shader = *Renderer::shader,
+						int mode = 0x0004);
 
 	static void drawGrid();
 

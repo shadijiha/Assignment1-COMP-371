@@ -12,7 +12,7 @@ void Renderer::setDefaultShader(Shader* shader)
 	Renderer::shader = shader;
 }
 
-void Renderer::drawCube(const glm::vec3& pos, const glm::vec3& rot, const glm::vec3& scale, const glm::vec4& color, Shader& shader)
+void Renderer::drawCube(const glm::vec3& pos, const glm::vec3& rot, const glm::vec3& scale, const glm::vec4& color, Shader& shader, int mode)
 {
 	static VertexArraysInfo vertexArrayInfo = init();
 
@@ -30,7 +30,7 @@ void Renderer::drawCube(const glm::vec3& pos, const glm::vec3& rot, const glm::v
 	/* Push each element in buffer_vertices to the vertex shader */
 	glBindBuffer(GL_ARRAY_BUFFER, vertexArrayInfo.rendererID);
 
-	glDrawElements(GL_TRIANGLES, vertexArrayInfo.indexCount, GL_UNSIGNED_INT, nullptr);
+	glDrawElements(mode, vertexArrayInfo.indexCount, GL_UNSIGNED_INT, nullptr);
 }
 
 void Renderer::drawGrid()
@@ -46,10 +46,9 @@ void Renderer::drawGrid()
 	//	}
 	//}
 
-	for (int i = 0; i < slices; i++) {
-		float y = (i + 1) / (float)slices;
-		Renderer::drawCube({ 0, y, 1 }, { 0, 0, 0 }, { 1, 0.0001, 0.0000001 }, { 0, 1, 1, 1 });
-		Renderer::drawCube({ y, 0, 1 }, { 0, 0, 0 }, { 0.0001, 1, 0.0000001 }, { 0, 1, 1, 1 });
+	for (int i = 0; i < 10; i++) {
+
+		Renderer::drawCube({ i, 0, 0, }, { 0, 0, 0 }, { 1, 1, 1 }, { 1, 1, 1, 1 }, *Renderer::shader, GL_LINE_LOOP);
 	}
 
 }
