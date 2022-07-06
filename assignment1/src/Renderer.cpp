@@ -13,7 +13,7 @@ void Renderer::setDefaultShader(Shader* shader)
 	Renderer::shader = shader;
 }
 
-void Renderer::drawCube(const glm::vec3& pos, const glm::vec3& rot, const glm::vec3& scale, const glm::vec4& color, Shader& shader)
+void Renderer::drawCube(const glm::vec3& pos, const glm::vec3& rot, const glm::vec3& scale, const glm::vec4& color, Shader& shader, int mode)
 {
 	static VertexArraysInfo vertexArrayInfo = init();
 
@@ -30,7 +30,7 @@ void Renderer::drawCube(const glm::vec3& pos, const glm::vec3& rot, const glm::v
 	shader.setFloat3("u_LightPosition", { 1, 0, camera->getPosition().z });
 	/* Push each element in buffer_vertices to the vertex shader */
 	glBindVertexArray(vertexArrayInfo.rendererID);
-	glDrawArrays(GL_TRIANGLES, 0, vertexArrayInfo.count);
+	glDrawArrays(mode, 0, vertexArrayInfo.count);
 }
 
 void Renderer::drawGrid()
@@ -46,10 +46,15 @@ void Renderer::drawGrid()
 	//	}
 	//}
 
-	for (int i = 0; i < slices; i++) {
+	/*for (int i = 0; i < slices; i++) {
 		float y = (i + 1) / (float)slices;
 		Renderer::drawCube({ 0, y, 1 }, { 30, 0,  0}, { 1, 0.0001, 0.01 }, { 0, 1, 1, 1 });
 		Renderer::drawCube({ y - 0.5, 0.5, 1 }, { 0, 0, 0}, { 0.0001, 1, 0.001 }, { 0, 1, 1, 1 });
+	}*/
+
+	for (int i = 0; i < 10; i++) {
+	
+		Renderer::drawCube({ i, 0, 0, }, { 0, 0, 0 }, { 1, 1, 1 }, {1, 1, 1, 1}, *Renderer::shader, GL_LINE_LOOP);
 	}
 
 }
