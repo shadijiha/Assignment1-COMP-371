@@ -59,15 +59,15 @@ VertexArraysInfo Renderer::init()
 	
 	GLfloat verticies[] = {
 		// front
-		-1.0, -1.0,  1.0, //0.0f,  0.0f,  1.0f,
-		 1.0, -1.0,  1.0, //0.0f,  0.0f,  1.0f,
-		 1.0,  1.0,  1.0, //0.0f,  0.0f,  1.0f,
-		-1.0,  1.0,  1.0, //0.0f,  0.0f,  1.0f
-		// back
-		-1.0, -1.0, -1.0, //0.0f,  0.0f, -1.0f,
-		 1.0, -1.0, -1.0, //0.0f,  0.0f, -1.0f,
-		 1.0,  1.0, -1.0, //0.0f,  0.0f, -1.0f,
-		-1.0,  1.0, -1.0, //0.0f,  0.0f, -1.0f
+		-1.0, -1.0,  1.0, 0.0f,  0.0f,  1.0f,
+		 1.0, -1.0,  1.0, 0.0f,  0.0f,  1.0f,
+		 1.0,  1.0,  1.0, 0.0f,  0.0f,  1.0f,
+		-1.0,  1.0,  1.0, 0.0f,  0.0f,  1.0f
+		// back			  	
+		-1.0, -1.0, -1.0, 0.0f,  0.0f, -1.0f,
+		 1.0, -1.0, -1.0, 0.0f,  0.0f, -1.0f,
+		 1.0,  1.0, -1.0, 0.0f,  0.0f, -1.0f,
+		-1.0,  1.0, -1.0, 0.0f,  0.0f, -1.0f
 
 		/*-0.5f, -0.5f, 0.0f,
 		0.5f, -0.5f, 0.0f,
@@ -82,11 +82,11 @@ VertexArraysInfo Renderer::init()
 
 	// position attribute
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3 /*6*/, 0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6, 0);
 
 	// normal attribute
-	//glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-	//glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
 
 	GLuint cube_indices[] = {
 		// front
