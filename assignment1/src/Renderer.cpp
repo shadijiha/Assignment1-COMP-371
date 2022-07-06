@@ -48,8 +48,8 @@ void Renderer::drawGrid()
 
 	for (int i = 0; i < slices; i++) {
 		float y = (i + 1) / (float)slices;
-		Renderer::drawCube({ 0, y, 1 }, { 0, 0, 0 }, { 1, 0.0001, 0.0000001 }, { 0, 1, 1, 1 });
-		Renderer::drawCube({ y, 0, 1 }, { 0, 0, 0 }, { 0.0001, 1, 0.0000001 }, { 0, 1, 1, 1 });
+		Renderer::drawCube({ 0, y, 1 }, { 30, 0,  0}, { 1, 0.0001, 0.01 }, { 0, 1, 1, 1 });
+		Renderer::drawCube({ y - 0.5, 0.5, 1 }, { 0, 0, 0}, { 0.0001, 1, 0.001 }, { 0, 1, 1, 1 });
 	}
 
 }

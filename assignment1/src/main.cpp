@@ -46,7 +46,7 @@ int main(int argc, const char** argv) {
 	Camera camera(window_width, window_height);
 	Shader shader("shaders/shader.glsl");
 	
-	camera.setPosition({ 0, 1, 1.3 });
+	camera.setPosition({ 0, 0, 2.3 });
 	// Main loop
 	glClearColor(0.05, 0.05, 0.2, 1.0);
 
@@ -73,7 +73,7 @@ int main(int argc, const char** argv) {
 		//Renderer::drawGrid();
 
 		Renderer::drawCube({ 0, 0, 0 }, { rotation, 0, 0 }, { 0.5, 0.5, 0.5 }, glm::vec4(1.0), shader);
-		//Renderer::drawCube({ 0, 0, 0 }, { rotation, 0, 0 }, { 0.5, 0.5, 0.5 }, glm::vec4(glm::rgbColor(glm::vec3{ color, 1.0f, 1.0f }), 1.0), shader);
+		Renderer::drawCube({ 0, 0, 0 }, { rotation, 0, 0 }, { 0.5, 0.5, 0.5 }, glm::vec4(glm::rgbColor(glm::vec3{ color, 1.0f, 1.0f }), 1.0), shader);
 		color += 0.1;
 		rotation += 30 * dt;
 
