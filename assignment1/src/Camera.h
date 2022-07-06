@@ -11,6 +11,8 @@ public:
 
 	glm::mat4 getViewProjection();
 
+	inline const glm::vec3& getPosition() const { return position; }
+
 private:
 	glm::vec3 position = glm::vec3(0.0f);
 	glm::vec3 rotation = glm::vec3(0.0f);

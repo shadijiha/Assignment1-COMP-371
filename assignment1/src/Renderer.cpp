@@ -1,6 +1,7 @@
 #include "Renderer.h"
 #include <GL/glew.h>
 #include <glm/gtx/transform.hpp>
+#include <iostream>
 
 void Renderer::setCamera(Camera* camera)
 {
@@ -26,11 +27,10 @@ void Renderer::drawCube(const glm::vec3& pos, const glm::vec3& rot, const glm::v
 	shader.setFloat4("u_Color", color);
 	shader.setMat4("u_ViewProjection", camera->getViewProjection());
 	shader.setMat4("u_Transform", transform);
-
+	shader.setFloat3("u_LightPosition", { 1, 0, camera->getPosition().z });
 	/* Push each element in buffer_vertices to the vertex shader */
-	glBindBuffer(GL_ARRAY_BUFFER, vertexArrayInfo.rendererID);
-
-	glDrawElements(GL_TRIANGLES, vertexArrayInfo.indexCount, GL_UNSIGNED_INT, nullptr);
+	glBindVertexArray(vertexArrayInfo.rendererID);
+	glDrawArrays(GL_TRIANGLES, 0, vertexArrayInfo.count);
 }
 
 void Renderer::drawGrid()
@@ -56,68 +56,71 @@ void Renderer::drawGrid()
 
 VertexArraysInfo Renderer::init()
 {
-	
-	GLfloat verticies[] = {
-		// front
-		-1.0, -1.0,  1.0, 0.0f,  0.0f,  1.0f,
-		 1.0, -1.0,  1.0, 0.0f,  0.0f,  1.0f,
-		 1.0,  1.0,  1.0, 0.0f,  0.0f,  1.0f,
-		-1.0,  1.0,  1.0, 0.0f,  0.0f,  1.0f
-		// back			  	
-		-1.0, -1.0, -1.0, 0.0f,  0.0f, -1.0f,
-		 1.0, -1.0, -1.0, 0.0f,  0.0f, -1.0f,
-		 1.0,  1.0, -1.0, 0.0f,  0.0f, -1.0f,
-		-1.0,  1.0, -1.0, 0.0f,  0.0f, -1.0f
+	float vertices[] = {
+		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+		 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+		 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
 
-		/*-0.5f, -0.5f, 0.0f,
-		0.5f, -0.5f, 0.0f,
-		 0.5f,  0.5f, 0.0f,
-		 -0.5f, 0.5f, 0.0f*/
+		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+
+		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+		-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+		-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+
+		 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+
+		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+
+		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+		 0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
 	};
 
-	GLuint vbo_cube_vertices;
-	glGenBuffers(1, &vbo_cube_vertices);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo_cube_vertices);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(verticies), verticies, GL_STATIC_DRAW);
+	// first, configure the cube's VAO (and VBO)
+	unsigned int VBO, cubeVAO;
+	glGenVertexArrays(1, &cubeVAO);
+	glGenBuffers(1, &VBO);
+
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+	glBindVertexArray(cubeVAO);
 
 	// position attribute
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6, 0);
-
 	// normal attribute
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 
-	GLuint cube_indices[] = {
-		// front
-		0, 1, 2,
-		2, 3, 0,
-		// right
-		1, 5, 6,
-		6, 2, 1,
-		// back
-		7, 6, 5,
-		5, 4, 7,
-		// left
-		4, 0, 3,
-		3, 7, 4,
-		// bottom
-		4, 5, 1,
-		1, 0, 4,
-		// top
-		3, 2, 6,
-		6, 7, 3
-	};
-
-	GLuint ibo;
-	glGenBuffers(1, &ibo);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cube_indices), cube_indices, GL_STATIC_DRAW);
-
 	VertexArraysInfo info;
-	info.size = sizeof(verticies);
-	info.rendererID = vbo_cube_vertices;
-	info.count = sizeof(verticies) / sizeof(GLfloat) / 3;
-	info.indexCount = sizeof(cube_indices) / sizeof(GLuint);
+	info.size = sizeof(vertices);
+	info.rendererID = cubeVAO;
+	info.count = sizeof(vertices) / sizeof(GLfloat) / 6;
+	info.indexCount = -1;//sizeof(cube_indices) / sizeof(GLuint);
 	return info;
 }
