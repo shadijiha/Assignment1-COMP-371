@@ -40,7 +40,7 @@ void Renderer::drawGrid()
 {
 	// Draw x y yellow grid
 	constexpr float gridDim = 1;
-	const int countPerAxis = 100;
+	const int countPerAxis = GridSize;
 	for (int i = -countPerAxis/2; i < countPerAxis/2; i++) {
 		for(int j = -countPerAxis / 2; j < countPerAxis / 2; j++)
 			Renderer::drawCube({ i, 0, j}, { 0, 0, 0 }, { gridDim, 0.01, gridDim }, {1, 1, 0, 1}, *Renderer::shader, GL_LINES);
@@ -52,6 +52,7 @@ void Renderer::drawGrid()
 	Renderer::drawCube({ lineLength / 2, 0, 0 }, { 0, 0, 0 }, { lineLength, 0.02, 0.02 }, { 1, 0, 0, 1 });
 	Renderer::drawCube({ 0, lineLength / 2, 0 }, { 0, 0, 0 }, { 0.02, lineLength, 0.02 }, { 0, 1, 0, 1 });
 	Renderer::drawCube({ 0, 0, lineLength / 2}, { 0, 0, 0 }, { 0.02, 0.02, lineLength }, { 0, 0, 1, 1 });
+
 }
 
 void Renderer::init()

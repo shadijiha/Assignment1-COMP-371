@@ -1,6 +1,7 @@
 #include "SceneManager.h"
 #include <assert.h>
 #include "Renderer.h"
+#include <iostream>
 
 static void handleErrors(GLenum source, GLenum type, GLuint id,
 	GLenum severity, GLsizei length, const GLchar* message, const void* userParam);
@@ -76,52 +77,25 @@ void SceneManager::run()
 
 void SceneManager::onCreate()
 {
-	camera.setPosition({ 0, 2, 2.3 });
+	camera.setRotation({ 30.0f, 30.0f, 0 });
+	camera.setPosition({ -3, 4, 10 });
 	olaf.onCreate(*this);
 
 	constexpr float camSpeed = 0.08f;
 	constexpr float camRotSpeed = 5.0f; // Degress
 
-	addKeyEvent(GLFW_KEY_D, [=](SceneManager& scene, WindowUserData& data, KeyAction action) {
-		auto& camera = scene.getCamera();
-		auto camPos = camera.getPosition();
-		camPos.x += camSpeed;
-		camera.setPosition(camPos);
-	});
-
-	addKeyEvent(GLFW_KEY_A, [=](SceneManager& scene, WindowUserData& data, KeyAction action) {
-		auto& camera = scene.getCamera();
-		auto camPos = camera.getPosition();
-		camPos.x -= camSpeed;
-		camera.setPosition(camPos);
-	});
-
-	addKeyEvent(GLFW_KEY_W, [=](SceneManager& scene, WindowUserData& data, KeyAction action) {
-		auto& camera = scene.getCamera();
-		auto camPos = camera.getPosition();
-		camPos.z -= camSpeed;
-		camera.setPosition(camPos);
-		});
-
-	addKeyEvent(GLFW_KEY_S, [=](SceneManager& scene, WindowUserData& data, KeyAction action) {
-		auto& camera = scene.getCamera();
-		auto camPos = camera.getPosition();
-		camPos.z += camSpeed;
-		camera.setPosition(camPos);
-		});
-
 	addKeyEvent(GLFW_KEY_UP, [=](SceneManager& scene, WindowUserData& data, KeyAction action) {
 		auto& camera = scene.getCamera();
-		auto camPos = camera.getPosition();
-		camPos.y += camSpeed;
-		camera.setPosition(camPos);
-		});
+		auto camRot = camera.getRotation();
+		camRot.x += camRotSpeed;
+		camera.setRotation(camRot);
+	});
 
 	addKeyEvent(GLFW_KEY_DOWN, [=](SceneManager& scene, WindowUserData& data, KeyAction action) {
 		auto& camera = scene.getCamera();
-		auto camPos = camera.getPosition();
-		camPos.y -= camSpeed;
-		camera.setPosition(camPos);
+		auto camRot = camera.getRotation();
+		camRot.x -= camRotSpeed;
+		camera.setRotation(camRot);;
 		});
 
 	// Camera rotation
@@ -139,6 +113,12 @@ void SceneManager::onCreate()
 		camera.setRotation(camRot);
 		});
 
+	addKeyEvent(GLFW_KEY_HOME, [=](SceneManager& scene, WindowUserData& data, KeyAction action) {
+		auto& camera = scene.getCamera();
+		camera.setRotation({ 30.0f, 30.0f, 0 });
+		camera.setPosition({-3, 4, 10});
+	});
+
 	addKeyEvent(GLFW_KEY_P, [](SceneManager& scene, WindowUserData& data, KeyAction action) {
 		Renderer::setDefaultRenderering(GL_POINTS);
 	});
@@ -151,10 +131,15 @@ void SceneManager::onCreate()
 		Renderer::setDefaultRenderering(GL_TRIANGLES);
 	});
 
+	addKeyEvent(GLFW_KEY_Z, [this](SceneManager& scene, WindowUserData& data, KeyAction action) {
+		std::cout << 1 / lastDt << std::endl;
+	});
+
 }
 
 void SceneManager::onUpdate(float dt)
 {
+	lastDt = dt;
 	olaf.onUpdate(dt);
 }
 
@@ -171,6 +156,11 @@ void SceneManager::onDestroyed()
 void SceneManager::addKeyEvent(int key, KeyEvent func)
 {
 	keyEvents.push_back(std::make_pair(key, func));
+}
+
+bool SceneManager::isShiftPressed() const
+{
+	return glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS;
 }
 
 void SceneManager::listenToEvents(GLFWwindow* window) {

@@ -37,6 +37,8 @@ public:
 	Camera& getCamera() { return camera; }
 	GLFWwindow* getWindow() { return window; }
 
+	bool isShiftPressed() const;
+
 private:
 	void SceneManager::listenToEvents(GLFWwindow* window);
 
@@ -47,5 +49,7 @@ private:
 	Camera camera;
 	Shader* shader;
 	Olaf olaf;
+
+	float lastDt = 0.0f;
 };
 

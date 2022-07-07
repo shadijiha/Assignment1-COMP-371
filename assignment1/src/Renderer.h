@@ -15,7 +15,6 @@ struct RendererInfo {
 };
 
 
-
 class Renderer
 {
 public:
@@ -34,10 +33,12 @@ public:
 	static void init();
 
 private:
-	
 	inline static Camera* camera = nullptr;
 	inline static Shader* shader = nullptr;		// Default shader
 	inline static int renderingMode = 0x0004;
 	inline static RendererInfo info;
+
+public:
+	inline static const int GridSize = 100;
 };
 

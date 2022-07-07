@@ -8,14 +8,57 @@ Olaf::Olaf()
 
 void Olaf::onCreate(SceneManager& manager)
 {
-	manager.addKeyEvent(85,  [this](SceneManager& manager, WindowUserData& data, KeyAction action) {
+	// Movement and rotation
+	constexpr float speed = 0.1;
+	manager.addKeyEvent(GLFW_KEY_D, [this, speed](SceneManager& scene, WindowUserData& data, KeyAction action) {
+		if (scene.isShiftPressed()) {
+			this->position.x += speed;
+		}
+		else
+		{
+			this->rotation.y += 5;
+		}
+	});
+
+	manager.addKeyEvent(GLFW_KEY_A, [this, speed](SceneManager& scene, WindowUserData& data, KeyAction action) {
+		if (scene.isShiftPressed()) {
+			this->position.x -= speed;
+		}
+		else
+		{
+			this->rotation.y += -5;
+		}
+	});
+
+	manager.addKeyEvent(GLFW_KEY_W, [this, speed](SceneManager& scene, WindowUserData& data, KeyAction action) {
+		if (scene.isShiftPressed()) {
+			this->position.z -= speed;
+		}
+	});
+	manager.addKeyEvent(GLFW_KEY_S, [this, speed](SceneManager& scene, WindowUserData& data, KeyAction action) {
+		if (scene.isShiftPressed()) {
+			this->position.z += speed;
+		}
+	});
+
+
+	// Scalling
+	manager.addKeyEvent(GLFW_KEY_U,  [this](SceneManager& manager, WindowUserData& data, KeyAction action) {
 		if (action == RELEASE)
 			this->scale += 0.5f;
 	});
 
-	manager.addKeyEvent(74, [this](SceneManager& manager, WindowUserData& data, KeyAction action) {
+	manager.addKeyEvent(GLFW_KEY_J, [this](SceneManager& manager, WindowUserData& data, KeyAction action) {
 		if (action == RELEASE)
 			this->scale -= 0.5f;
+	});
+
+	// Random position
+	manager.addKeyEvent(GLFW_KEY_SPACE, [this](SceneManager& manager, WindowUserData& data, KeyAction action) {
+		const int half = Renderer::GridSize / 2;
+		if (action == RELEASE)
+			this->position = { rand() % Renderer::GridSize - half,
+			0, rand() % Renderer::GridSize - half };
 	});
 }
 
@@ -55,7 +98,7 @@ void Olaf::onUpdate(float dt)
 	armsPos.x += chestScale.x;
 	glm::vec3 armsScale = glm::vec3{3, 0.5, .6} * scale;
 	Renderer::drawCube(armsPos, rotation, armsScale);
-	armsPos.x *= -1.0f;
+	armsPos.x -= chestScale.x * 2;
 	Renderer::drawCube(armsPos, rotation, armsScale * -1.0f);
 }
 
