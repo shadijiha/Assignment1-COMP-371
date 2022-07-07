@@ -14,10 +14,7 @@ struct RendererInfo {
 	uint32_t quad_indexCount;
 };
 
-struct WindowUserData {
-	uint32_t width, height;
-	Camera* camera;
-};
+
 
 class Renderer
 {
@@ -32,13 +29,6 @@ public:
 						 const glm::vec4& color = {1, 1, 1, 1},
 						 Shader& shader = *Renderer::shader,
 						int mode = Renderer::renderingMode);
-
-	static void drawQuad(const glm::vec3& pos = { 0, 0, 0 },
-						 const glm::vec3& rot = { 0, 0, 0 },
-						 const glm::vec3& scale = { 1, 1, 1 },
-						 const glm::vec4& color = { 1, 1, 1, 1 },
-						 Shader& shader = *Renderer::shader,
-						 int mode = Renderer::renderingMode);
 
 	static void drawGrid();
 	static void init();
