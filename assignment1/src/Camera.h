@@ -16,6 +16,8 @@ public:
 	void onUpdate(float dt);
 
 	const glm::mat4& getViewProjection() const { return viewProj;}
+	const glm::mat4& getView() const { return view; }
+	const glm::mat4& getProjection() const { return proj; }
 
 	inline const glm::vec3& getPosition() const { return position; }
 	inline const glm::vec3& getRotation() const { return rotation; }
@@ -30,6 +32,8 @@ private:
 	glm::vec3 position = glm::vec3(0.0f);
 	glm::vec3 rotation = glm::vec3(0.0f);
 
+	glm::mat4 view =glm::mat4(1.0f);
+	glm::mat4 proj = glm::mat4(1.0f);
 	glm::mat4 viewProj = glm::mat4(1.0f);
 
 	uint32_t width, height;

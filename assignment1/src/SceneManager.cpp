@@ -44,6 +44,7 @@ SceneManager::SceneManager(uint32_t width, uint32_t height)
 
 	// Default renderer settings
 	shader = new Shader("shaders/shader.glsl");
+
 	Renderer::init();
 	Renderer::setCamera(&camera);
 	Renderer::setDefaultShader(shader);
@@ -69,11 +70,14 @@ void SceneManager::run()
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		// Draw x, y grid
+		// Draw x, y grid and skybox
+		
 		Renderer::drawGrid();
 		onUpdate(dt);
 		onUI();
 
+		// skybox cube
+		Renderer::drawSkyBox();
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}

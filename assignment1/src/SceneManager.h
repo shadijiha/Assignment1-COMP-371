@@ -45,7 +45,7 @@ public:
 	glm::vec2 getMousePos() const;
 
 private:
-	void SceneManager::listenToEvents(GLFWwindow* window);
+	void listenToEvents(GLFWwindow* window);
 
 private:
 	std::vector<std::pair<int, KeyEvent>> keyEvents;
