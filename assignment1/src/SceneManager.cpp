@@ -181,6 +181,12 @@ void SceneManager::onUI() {
 
 	// UI Code goes here
 	ImGui::Begin("Controls");
+
+	if (ImGui::IsWindowHovered())
+		camera.enableMouseZoom(false);
+	else
+		camera.enableMouseZoom(true);
+
 	ImGui::Text("You can use these controls or the Key shortcuts");
 
 	// Draw sections
@@ -218,29 +224,28 @@ void SceneManager::onUI() {
 		ImGui::DragInt("Grid count ", &Renderer::GridSize);
 
 		// Select menu to change Rendering mode
-		const char* types[] = { "Triangles", "Lines", "Points"};
-		int index[] = {GL_TRIANGLES, GL_LINE_LOOP, GL_POINTS};
-		int currentIndex = Renderer::getRenderingMode() == GL_TRIANGLES ? 0 : Renderer::getRenderingMode() == GL_LINE_LOOP ? 1 : 2;
+		static int selected_radio = 0;
 
-		const char* currentType = types[currentIndex];
-		if (ImGui::BeginCombo("Rendering mode", currentType)) {
-
-			for (int i = 0; i < 3; i++) {
-				bool isSelected = currentType == types[i];
-
-				if (ImGui::Selectable(types[i], isSelected)) {
-					currentType = types[i];
-
-					// Change camera type
-					Renderer::setDefaultRenderering(index[i]);
-				}
-
-				if (isSelected)
-					ImGui::SetItemDefaultFocus();
-			}
-
-			ImGui::EndCombo();
+		ImGui::PushID(0);
+		if (ImGui::RadioButton("Triangles", &selected_radio, 0))
+		{
+			Renderer::setDefaultRenderering(GL_TRIANGLES);
 		}
+		ImGui::PopID();
+
+		ImGui::PushID(1);
+		if (ImGui::RadioButton("Lines", &selected_radio, 1))
+		{
+			Renderer::setDefaultRenderering(GL_LINE_LOOP);
+		}
+		ImGui::PopID();
+
+		ImGui::PushID(2);
+		if (ImGui::RadioButton("Points", &selected_radio, 2))
+		{
+			Renderer::setDefaultRenderering(GL_POINTS);
+		}
+		ImGui::PopID();
 
 		ImGui::TreePop();
 	}

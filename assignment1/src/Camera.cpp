@@ -20,14 +20,13 @@ void Camera::setWindowSize(uint32_t width, uint32_t height)
 
 void Camera::onUpdate(float dt) {
 
-    if (manager.isMouseButtonDown(MouseCode::BUTTON_LEFT)) {
+    if (manager.isMouseButtonDown(MouseCode::BUTTON_LEFT) && zoomEnabled) {
         const glm::vec2& mouse = manager.getMousePos();
         glm::vec2 delta = (mouse - m_InitialMousePosition) * 0.03f;
         m_InitialMousePosition = mouse;
 
         position.z += delta.y;
         recalculateMatrix();
-        std::cout << delta.y << std::endl;
     }
 
 }

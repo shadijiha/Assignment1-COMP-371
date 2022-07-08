@@ -21,6 +21,8 @@ public:
 	inline const glm::vec3& getRotation() const { return rotation; }
 	inline const uint32_t getWidth() const { return width; }
 	inline const uint32_t getHeight() const { return height; }
+
+	void enableMouseZoom(bool cond) { zoomEnabled = cond; }
 private:
 	void recalculateMatrix();
 
@@ -31,6 +33,7 @@ private:
 	glm::mat4 viewProj = glm::mat4(1.0f);
 
 	uint32_t width, height;
+	bool zoomEnabled = true;
 
 	glm::vec2 m_InitialMousePosition = glm::vec2(0);
 

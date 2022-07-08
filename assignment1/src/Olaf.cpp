@@ -80,6 +80,7 @@ void Olaf::onUpdate(float dt)
 		feetPos.x -= rootScale.x * 0.5;
 		Renderer::drawCube(feetPos, { rotation, rootPos }, feetScale);
 	}
+
 	// Chest
 	glm::vec3 chestPos = rootPos;
 	auto chestScale = rootScale * 0.7f;
@@ -92,6 +93,38 @@ void Olaf::onUpdate(float dt)
 	auto headScale = chestScale * 0.8f;
 	headPos.y += chestScale.y / 2 + headScale.y / 2;
 	Renderer::drawCube(headPos, { rotation, rootPos }, headScale);
+
+	// Nose
+	{
+		glm::vec3 nosePos = headPos;
+		nosePos.z += headScale.z / 2;
+		auto noseScale = glm::vec3{0.1, 0.1, 0.5} * scale;
+
+		Renderer::drawCube(nosePos, { rotation, rootPos },
+				noseScale,
+				glm::vec4{ 235.0f / 255.0f, 119.0f / 255.0f, 52.0f / 255.0f, 1.0f });
+	}
+
+	// Eyes
+	{
+		glm::vec3 eyesPos = headPos;
+		eyesPos.z += headScale.z / 2;
+		eyesPos.x += headScale.x * 0.25;
+		eyesPos.y += headScale.y * 0.25;
+
+		auto eyesScale = glm::vec3{ 0.2, 0.2, 0.2 } *scale;
+
+		Renderer::drawCube(eyesPos, { rotation, rootPos },
+			eyesScale, { 0, 0, 0, 1 });
+
+
+		eyesPos = headPos;
+		eyesPos.z += headScale.z / 2;
+		eyesPos.x -= headScale.x * 0.25;
+		eyesPos.y += headScale.y * 0.25;
+		Renderer::drawCube(eyesPos, { rotation, rootPos },
+			eyesScale, { 0, 0, 0, 1 });
+	}
 
 	// Arms
 	{
