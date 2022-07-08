@@ -32,6 +32,8 @@ public:
 	static void drawGrid();
 	static void init();
 
+	inline static int getRenderingMode() { return renderingMode; }
+
 private:
 	inline static Camera* camera = nullptr;
 	inline static Shader* shader = nullptr;		// Default shader
@@ -39,6 +41,6 @@ private:
 	inline static RendererInfo info;
 
 public:
-	inline static const int GridSize = 100;
+	inline static int GridSize = 100;
 };
 

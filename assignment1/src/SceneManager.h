@@ -6,6 +6,7 @@
 #include <Camera.h>
 #include <Shader.h>
 #include <Olaf.h>
+#include "KeyCodes.h"
 
 class SceneManager;
 
@@ -30,6 +31,7 @@ public:
 	void run();
 	void onCreate();
 	void onUpdate(float dt);
+	void onUI();
 	void onDestroyed();
 
 	void addKeyEvent(int key, KeyEvent func);
@@ -37,7 +39,10 @@ public:
 	Camera& getCamera() { return camera; }
 	GLFWwindow* getWindow() { return window; }
 
+	bool isKeyDown(KeyCode keyCode) const;
+	bool isMouseButtonDown(MouseCode buttonCode) const;
 	bool isShiftPressed() const;
+	glm::vec2 getMousePos() const;
 
 private:
 	void SceneManager::listenToEvents(GLFWwindow* window);
@@ -51,5 +56,7 @@ private:
 	Olaf olaf;
 
 	float lastDt = 0.0f;
+
+	
 };
 

@@ -55,10 +55,8 @@ void Olaf::onCreate(SceneManager& manager)
 
 	// Random position
 	manager.addKeyEvent(GLFW_KEY_SPACE, [this](SceneManager& manager, WindowUserData& data, KeyAction action) {
-		const int half = Renderer::GridSize / 2;
 		if (action == RELEASE)
-			this->position = { rand() % Renderer::GridSize - half,
-			0, rand() % Renderer::GridSize - half };
+			randomPosition();
 	});
 }
 
@@ -104,4 +102,10 @@ void Olaf::onUpdate(float dt)
 
 void Olaf::onDestroyed()
 {
+}
+
+void Olaf::randomPosition() {
+	const int half = Renderer::GridSize / 2;
+	this->position = { rand() % Renderer::GridSize - half,
+			0, rand() % Renderer::GridSize - half };
 }
