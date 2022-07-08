@@ -57,7 +57,7 @@ void Camera::recalculateMatrix()
     view = glm::rotate(view, glm::radians(rotation.y), { 0, 1, 0 });
     view = glm::rotate(view, glm::radians(rotation.z), { 0, 0, 1 });
     view = glm::translate(view, -position);
-    glm::mat4 projectionMatrix = glm::perspective(glm::radians(90.0f), (float)width / (float)height, 0.1f, 100.0f);
+    glm::mat4 projectionMatrix = glm::perspective(glm::radians(90.0f), (float)width / (float)height, 0.1f, 1000.0f);
 
     this->view = view;
     this->proj = projectionMatrix;

@@ -74,10 +74,13 @@ void SceneManager::run()
 		
 		Renderer::drawGrid();
 		onUpdate(dt);
-		onUI();
-
+		
 		// skybox cube
 		Renderer::drawSkyBox();
+
+		// Draw UI on top of everything
+		onUI();
+
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
