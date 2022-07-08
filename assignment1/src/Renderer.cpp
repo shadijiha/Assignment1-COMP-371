@@ -26,6 +26,25 @@ void Renderer::drawCube(const glm::vec3& pos, const glm::vec3& rot, const glm::v
 		glm::rotate(glm::mat4(1.0f), glm::radians(rot.z), { 0, 0, 1 })	*
 		glm::scale(glm::mat4(1.0), scale);
 
+	drawCube(transform, color, shader, mode);
+}
+
+void Renderer::drawCube(const glm::vec3& pos, const RotationInfo& rotationData, const glm::vec3& scale,
+	const glm::vec4& color, Shader& shader, int mode) {
+
+	auto rotation = rotationData.rotation;
+	glm::mat4 transform = glm::translate(glm::mat4(1.0f), rotationData.origin)
+		* glm::rotate(glm::mat4(1.0), glm::radians(rotation.x), { 1, 0, 0 })
+		* glm::rotate(glm::mat4(1.0), glm::radians(rotation.y), { 0, 1, 0 })
+		* glm::rotate(glm::mat4(1.0), glm::radians(rotation.z), { 0, 0, 1 })
+		* glm::translate(glm::mat4(1.0f), -rotationData.origin)
+		* glm::translate(glm::mat4(1.0), pos)
+		* glm::scale(scale);
+
+	drawCube(transform, color, shader, mode);
+}
+
+void Renderer::drawCube(const glm::mat4& transform, const glm::vec4& color, Shader& shader, int mode) {
 	shader.bind();
 	shader.setFloat4("u_Color", color);
 	shader.setMat4("u_ViewProjection", camera->getViewProjection());

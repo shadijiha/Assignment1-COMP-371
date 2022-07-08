@@ -1,4 +1,5 @@
 #include "Olaf.h"
+#include <glm/gtx/transform.hpp>
 #include "Renderer.h"
 #include "SceneManager.h"
 
@@ -71,33 +72,38 @@ void Olaf::onUpdate(float dt)
 	Renderer::drawCube(rootPos, rotation, rootScale);
 	
 	// Feet
-	glm::vec3 feetPos = rootPos;
-	feetPos.y = feetScale.y / 2;
-	feetPos.x += rootScale.x * 0.25;
-	Renderer::drawCube(feetPos, rotation, feetScale);
-	feetPos.x -= rootScale.x * 0.5;
-	Renderer::drawCube(feetPos, rotation, feetScale);
-
+	{
+		glm::vec3 feetPos = rootPos;
+		feetPos.y -= rootScale.y / 2 + feetScale.y / 2;
+		feetPos.x += rootScale.x * 0.25;
+		Renderer::drawCube(feetPos, { rotation, rootPos }, feetScale);
+		feetPos.x -= rootScale.x * 0.5;
+		Renderer::drawCube(feetPos, { rotation, rootPos }, feetScale);
+	}
 	// Chest
 	glm::vec3 chestPos = rootPos;
 	auto chestScale = rootScale * 0.7f;
 	chestScale.y *= 0.6;
 	chestPos.y += rootScale.y / 2 + chestScale.y / 2;
-	Renderer::drawCube(chestPos, rotation, chestScale);
+	Renderer::drawCube(chestPos, { rotation, rootPos }, chestScale);
 
 	// Head
 	glm::vec3 headPos = chestPos;
 	auto headScale = chestScale * 0.8f;
 	headPos.y += chestScale.y / 2 + headScale.y / 2;
-	Renderer::drawCube(headPos, rotation, headScale);
+	Renderer::drawCube(headPos, { rotation, rootPos }, headScale);
 
 	// Arms
-	glm::vec3 armsPos = chestPos;
-	armsPos.x += chestScale.x;
-	glm::vec3 armsScale = glm::vec3{3, 0.5, .6} * scale;
-	Renderer::drawCube(armsPos, rotation, armsScale);
-	armsPos.x -= chestScale.x * 2;
-	Renderer::drawCube(armsPos, rotation, armsScale * -1.0f);
+	{
+		glm::vec3 armsPos = chestPos;
+		armsPos.x += chestScale.x;
+		glm::vec3 armsScale = glm::vec3{ 3, 0.5, .6 } *scale;
+
+		Renderer::drawCube(armsPos, { rotation, rootPos }, armsScale);
+
+		armsPos.x -= chestScale.x * 2;
+		Renderer::drawCube(armsPos, { rotation, rootPos }, -armsScale);
+	}
 }
 
 void Olaf::onDestroyed()
