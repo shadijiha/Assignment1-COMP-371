@@ -263,7 +263,7 @@ void SceneManager::onUI() {
 	if (openLight) {
 		ImGui::DragFloat3("position ", (float*) &light.position);
 		ImGui::ColorEdit4("colour ", (float*)&light.color);
-		ImGui::DragFloat("ambiant strength ", &light.ambientStrength);
+		ImGui::DragFloat("ambiant strength ", &light.ambientStrength, 0.01);
 
 		ImGui::TreePop();
 	}
