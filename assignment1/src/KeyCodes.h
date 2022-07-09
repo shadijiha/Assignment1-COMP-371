@@ -1,5 +1,9 @@
 #pragma once
 
+enum KeyAction {
+	PRESS = 1, RELEASE = 0, REPEAT = 2
+};
+
 enum class KeyCode {
 
 	/* Printable keys */

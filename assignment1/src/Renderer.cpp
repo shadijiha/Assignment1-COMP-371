@@ -3,6 +3,7 @@
 #include <glm/gtx/transform.hpp>
 #include <iostream>
 
+#include "Light.h"
 #include "stb_image/stb_image.h"
 
 void Renderer::setCamera(Camera* camera)
@@ -18,6 +19,10 @@ void Renderer::setDefaultShader(Shader* shader)
 void Renderer::setDefaultRenderering(int mode)
 {
 	Renderer::renderingMode = mode;
+}
+
+void Renderer::setLight(Light* light) {
+	Renderer::light = light;
 }
 
 void Renderer::drawCube(const glm::vec3& pos, const glm::vec3& rot, const glm::vec3& scale, const glm::vec4& color, Shader& shader, int mode)
@@ -51,7 +56,12 @@ void Renderer::drawCube(const glm::mat4& transform, const glm::vec4& color, Shad
 	shader.setFloat4("u_Color", color);
 	shader.setMat4("u_ViewProjection", camera->getViewProjection());
 	shader.setMat4("u_Transform", transform);
-	shader.setFloat3("u_LightPosition", camera->getPosition());
+
+	shader.setFloat3("u_LightPosition", light->position);
+	shader.setFloat4("u_LightColor", light->color);
+	shader.setFloat("u_AmbientStrength", light->ambientStrength);
+
+
 	/* Push each element in buffer_vertices to the vertex shader */
 	glBindVertexArray(Renderer::info.cube_rendererID);
 	glDrawArrays(mode, 0, Renderer::info.cube_count);

@@ -33,12 +33,13 @@ in vec4 v_Normal;
 in vec3 v_FragPos; 
 
 uniform vec3 u_LightPosition;
+uniform float u_AmbientStrength;
+uniform vec4 u_LightColor;
 
 void main()
 {
-    vec3 lightColor = vec3(1.0, 1.0, 1.0);
-    float ambientStrength = 0.5;
-    vec3 ambient = ambientStrength * lightColor;
+    vec3 lightColor = u_LightColor.xyz;
+    vec3 ambient = u_AmbientStrength * lightColor;
 
     vec4 norm = normalize(v_Normal);
     vec3 lightDir = normalize(u_LightPosition - v_FragPos);

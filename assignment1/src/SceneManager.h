@@ -7,6 +7,7 @@
 #include <Shader.h>
 #include <Olaf.h>
 #include "KeyCodes.h"
+#include "Light.h"
 
 class SceneManager;
 
@@ -16,9 +17,7 @@ struct WindowUserData {
 	SceneManager* sceneManager;
 };
 
-enum KeyAction {
-	PRESS = GLFW_PRESS, RELEASE = GLFW_RELEASE, REPEAT = GLFW_REPEAT
-};
+
 
 class SceneManager
 {
@@ -53,10 +52,9 @@ private:
 	GLFWwindow* window;
 	Camera camera;
 	Shader* shader;
+	Light light;
 	Olaf olaf;
 
-	float lastDt = 0.0f;
-
-	
+	float lastDt = 0.0f;	
 };
 

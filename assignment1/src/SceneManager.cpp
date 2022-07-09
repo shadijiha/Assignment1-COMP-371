@@ -48,6 +48,7 @@ SceneManager::SceneManager(uint32_t width, uint32_t height)
 	Renderer::init();
 	Renderer::setCamera(&camera);
 	Renderer::setDefaultShader(shader);
+	Renderer::setLight(&light);
 }
 
 SceneManager::~SceneManager()
@@ -253,6 +254,16 @@ void SceneManager::onUI() {
 			Renderer::setDefaultRenderering(GL_POINTS);
 		}
 		ImGui::PopID();
+
+		ImGui::TreePop();
+	}
+
+	// Light settings
+	bool openLight = ImGui::TreeNodeEx((void*)typeid(Light).hash_code(), treeNodeFlags, "Light settings");
+	if (openLight) {
+		ImGui::DragFloat3("position ", (float*) &light.position);
+		ImGui::ColorEdit4("colour ", (float*)&light.color);
+		ImGui::DragFloat("ambiant strength ", &light.ambientStrength);
 
 		ImGui::TreePop();
 	}

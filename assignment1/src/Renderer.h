@@ -2,6 +2,8 @@
 #include <Camera.h>
 #include <Shader.h>
 
+struct Light;
+
 // Unsed to store RendererIDs in Renderer class
 struct RendererInfo {
 	uint32_t cube_rendererID;
@@ -31,6 +33,7 @@ public:
 	static void setCamera(Camera* camera);
 	static void setDefaultShader(Shader* shader);
 	static void setDefaultRenderering(int mode);
+	static void setLight(Light* light);
 
 	/**
 	 * \brief Draw a cube at selected location, rotation, scale, colour
@@ -96,6 +99,7 @@ private:
 
 private:
 	inline static Camera* camera = nullptr;
+	inline static Light* light = nullptr;
 	inline static Shader* shader = nullptr;		// Default shader
 	inline static Shader* skyboxShader = nullptr;		// Skybox shader
 	inline static int renderingMode = 0x0004;
