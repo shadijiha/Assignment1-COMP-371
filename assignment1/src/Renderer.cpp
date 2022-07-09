@@ -1,6 +1,10 @@
 #include "Renderer.h"
 #include <GL/glew.h>
 #include <glm/gtx/transform.hpp>
+#include <iostream>
+
+#include "Light.h"
+#include "stb_image/stb_image.h"
 
 void Renderer::setCamera(Camera* camera)
 {
@@ -12,111 +16,268 @@ void Renderer::setDefaultShader(Shader* shader)
 	Renderer::shader = shader;
 }
 
+void Renderer::setDefaultRenderering(int mode)
+{
+	Renderer::renderingMode = mode;
+}
+
+void Renderer::setLight(Light* light) {
+	Renderer::light = light;
+}
+
 void Renderer::drawCube(const glm::vec3& pos, const glm::vec3& rot, const glm::vec3& scale, const glm::vec4& color, Shader& shader, int mode)
 {
-	static VertexArraysInfo vertexArrayInfo = init();
-
 	glm::mat4 transform = glm::mat4(1.0) * glm::translate(glm::mat4(1.0), pos) *
 		glm::rotate(glm::mat4(1.0f), glm::radians(rot.x), { 1, 0, 0 }) *
 		glm::rotate(glm::mat4(1.0f), glm::radians(rot.y), { 0, 1, 0 }) *
 		glm::rotate(glm::mat4(1.0f), glm::radians(rot.z), { 0, 0, 1 })	*
 		glm::scale(glm::mat4(1.0), scale);
 
+	drawCube(transform, color, shader, mode);
+}
+
+void Renderer::drawCube(const glm::vec3& pos, const RotationInfo& rotationData, const glm::vec3& scale,
+	const glm::vec4& color, Shader& shader, int mode) {
+
+	auto rotation = rotationData.rotation;
+	glm::mat4 transform = glm::translate(glm::mat4(1.0f), rotationData.origin)
+		* glm::rotate(glm::mat4(1.0), glm::radians(rotation.x), { 1, 0, 0 })
+		* glm::rotate(glm::mat4(1.0), glm::radians(rotation.y), { 0, 1, 0 })
+		* glm::rotate(glm::mat4(1.0), glm::radians(rotation.z), { 0, 0, 1 })
+		* glm::translate(glm::mat4(1.0f), -rotationData.origin)
+		* glm::translate(glm::mat4(1.0), pos)
+		* glm::scale(scale);
+
+	drawCube(transform, color, shader, mode);
+}
+
+void Renderer::drawCube(const glm::mat4& transform, const glm::vec4& color, Shader& shader, int mode) {
 	shader.bind();
 	shader.setFloat4("u_Color", color);
 	shader.setMat4("u_ViewProjection", camera->getViewProjection());
 	shader.setMat4("u_Transform", transform);
 
-	/* Push each element in buffer_vertices to the vertex shader */
-	glBindBuffer(GL_ARRAY_BUFFER, vertexArrayInfo.rendererID);
+	shader.setFloat3("u_LightPosition", light->position);
+	shader.setFloat4("u_LightColor", light->color);
+	shader.setFloat("u_AmbientStrength", light->ambientStrength);
 
-	glDrawElements(mode, vertexArrayInfo.indexCount, GL_UNSIGNED_INT, nullptr);
+
+	/* Push each element in buffer_vertices to the vertex shader */
+	glBindVertexArray(Renderer::info.cube_rendererID);
+	glDrawArrays(mode, 0, Renderer::info.cube_count);
 }
 
 void Renderer::drawGrid()
 {
 	// Draw x y yellow grid
-	const int slices = 20;
-	//for (int i = 0; i < slices; i++) {
-	//	for (int j = 0; j < slices; j++) {
-	//		float x = (float)i / (float)slices;
-	//		float y = 0;
-	//		float z = (float)j / (float)slices;
-	//		Renderer::drawCube({ x, z, 1 }, { 0, 0, 0 }, { 0.001, 0.001, 0.001 }, {0, 1, 1, 1});
-	//	}
-	//}
-
-	for (int i = 0; i < 10; i++) {
-
-		Renderer::drawCube({ i, 0, 0, }, { 0, 0, 0 }, { 1, 1, 1 }, { 1, 1, 1, 1 }, *Renderer::shader, GL_LINE_LOOP);
+	constexpr float gridDim = 1;
+	const int countPerAxis = GridSize;
+	for (int i = -countPerAxis/2; i < countPerAxis/2; i++) {
+		for(int j = -countPerAxis / 2; j < countPerAxis / 2; j++)
+			Renderer::drawCube({ i, 0, j}, { 0, 0, 0 }, { gridDim, 0.01, gridDim }, {1, 1, 0, 1}, *Renderer::shader, GL_LINES);
 	}
+
+
+	// Draw axis lines
+	constexpr float lineLength = 5 * gridDim;
+	Renderer::drawCube({ lineLength / 2, 0, 0 }, { 0, 0, 0 }, { lineLength, 0.02, 0.02 }, { 1, 0, 0, 1 });
+	Renderer::drawCube({ 0, lineLength / 2, 0 }, { 0, 0, 0 }, { 0.02, lineLength, 0.02 }, { 0, 1, 0, 1 });
+	Renderer::drawCube({ 0, 0, lineLength / 2}, { 0, 0, 0 }, { 0.02, 0.02, lineLength }, { 0, 0, 1, 1 });
 
 }
 
-VertexArraysInfo Renderer::init()
-{
-	
-	GLfloat verticies[] = {
-		// front
-		-1.0, -1.0,  1.0, //0.0f,  0.0f,  1.0f,
-		 1.0, -1.0,  1.0, //0.0f,  0.0f,  1.0f,
-		 1.0,  1.0,  1.0, //0.0f,  0.0f,  1.0f,
-		-1.0,  1.0,  1.0, //0.0f,  0.0f,  1.0f
-		// back
-		-1.0, -1.0, -1.0, //0.0f,  0.0f, -1.0f,
-		 1.0, -1.0, -1.0, //0.0f,  0.0f, -1.0f,
-		 1.0,  1.0, -1.0, //0.0f,  0.0f, -1.0f,
-		-1.0,  1.0, -1.0, //0.0f,  0.0f, -1.0f
+void Renderer::drawSkyBox() {
+	glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
+	skyboxShader->bind();
 
-		/*-0.5f, -0.5f, 0.0f,
-		0.5f, -0.5f, 0.0f,
-		 0.5f,  0.5f, 0.0f,
-		 -0.5f, 0.5f, 0.0f*/
+	const auto&  view = glm::mat4(glm::mat3(camera->getView())); // remove translation from the view matrix
+	skyboxShader->setMat4("view", view);
+	skyboxShader->setMat4("proj", camera->getProjection());
+	skyboxShader->setInt("skybox", 0);
+
+	glBindVertexArray(info.skybox_VAO_RendererID);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, info.skybox_Text_RendererID);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+	glBindVertexArray(0);
+	glDepthFunc(GL_LESS); // set depth function back to default
+}
+
+/**
+ * *****************************
+ * ******** Init Stuff *********
+ * *****************************
+ */
+void Renderer::init()
+{
+	//******************** CUBE Stuff ********************
+	float vertices[] = {
+		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+		 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+		 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+
+		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+
+		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+		-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+		-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+
+		 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+
+		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+
+		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+		 0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
 	};
 
-	GLuint vbo_cube_vertices;
-	glGenBuffers(1, &vbo_cube_vertices);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo_cube_vertices);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(verticies), verticies, GL_STATIC_DRAW);
+	// first, configure the cube's VAO (and VBO)
+	unsigned int VBO, cubeVAO;
+	glGenVertexArrays(1, &cubeVAO);
+	glGenBuffers(1, &VBO);
+
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+	glBindVertexArray(cubeVAO);
 
 	// position attribute
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3 /*6*/, 0);
 
 	// normal attribute
-	//glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-	//glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
 
-	GLuint cube_indices[] = {
-		// front
-		0, 1, 2,
-		2, 3, 0,
-		// right
-		1, 5, 6,
-		6, 2, 1,
-		// back
-		7, 6, 5,
-		5, 4, 7,
-		// left
-		4, 0, 3,
-		3, 7, 4,
-		// bottom
-		4, 5, 1,
-		1, 0, 4,
-		// top
-		3, 2, 6,
-		6, 7, 3
+	RendererInfo info;
+	info.cube_size = sizeof(vertices);
+	info.cube_rendererID = cubeVAO;
+	info.cube_count = sizeof(vertices) / sizeof(GLfloat) / 6;
+	info.cube_indexCount = -1;//sizeof(cube_indices) / sizeof(GLuint);
+
+
+	Renderer::info = info;
+
+	Renderer::initCubeMap();
+}
+
+void Renderer::initCubeMap() {
+	std::vector<std::string> faces{
+			"shaders/skybox/right.jpg",
+			"shaders/skybox/left.jpg",
+			"shaders/skybox/top.jpg",
+			"shaders/skybox/bottom.jpg",
+			"shaders/skybox/front.jpg",
+			"shaders/skybox/back.jpg"
 	};
 
-	GLuint ibo;
-	glGenBuffers(1, &ibo);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cube_indices), cube_indices, GL_STATIC_DRAW);
+	unsigned int textureID;
+	glGenTextures(1, &textureID);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
 
-	VertexArraysInfo info;
-	info.size = sizeof(verticies);
-	info.rendererID = vbo_cube_vertices;
-	info.count = sizeof(verticies) / sizeof(GLfloat) / 3;
-	info.indexCount = sizeof(cube_indices) / sizeof(GLuint);
-	return info;
+	int width, height, nrChannels;
+	for (unsigned int i = 0; i < faces.size(); i++)
+	{
+		unsigned char* data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
+		if (data)
+		{
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+			stbi_image_free(data);
+		} else
+		{
+			std::cout << "Cubemap texture failed to load at path: " << faces[i] << std::endl;
+			stbi_image_free(data);
+		}
+	}
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+
+	skyboxShader = new Shader("shaders/skyboxShader.glsl");
+
+	// Init VAO skybox
+	float skyboxVertices[] = {
+		// positions          
+		-1.0f,  1.0f, -1.0f,
+		-1.0f, -1.0f, -1.0f,
+		 1.0f, -1.0f, -1.0f,
+		 1.0f, -1.0f, -1.0f,
+		 1.0f,  1.0f, -1.0f,
+		-1.0f,  1.0f, -1.0f,
+
+		-1.0f, -1.0f,  1.0f,
+		-1.0f, -1.0f, -1.0f,
+		-1.0f,  1.0f, -1.0f,
+		-1.0f,  1.0f, -1.0f,
+		-1.0f,  1.0f,  1.0f,
+		-1.0f, -1.0f,  1.0f,
+
+		 1.0f, -1.0f, -1.0f,
+		 1.0f, -1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f, -1.0f,
+		 1.0f, -1.0f, -1.0f,
+
+		-1.0f, -1.0f,  1.0f,
+		-1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f, -1.0f,  1.0f,
+		-1.0f, -1.0f,  1.0f,
+
+		-1.0f,  1.0f, -1.0f,
+		 1.0f,  1.0f, -1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		-1.0f,  1.0f,  1.0f,
+		-1.0f,  1.0f, -1.0f,
+
+		-1.0f, -1.0f, -1.0f,
+		-1.0f, -1.0f,  1.0f,
+		 1.0f, -1.0f, -1.0f,
+		 1.0f, -1.0f, -1.0f,
+		-1.0f, -1.0f,  1.0f,
+		 1.0f, -1.0f,  1.0f
+	};
+
+	// skybox VAO
+	unsigned int skyboxVAO, skyboxVBO;
+	glGenVertexArrays(1, &skyboxVAO);
+	glGenBuffers(1, &skyboxVBO);
+	glBindVertexArray(skyboxVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+
+	Renderer::info.skybox_Text_RendererID = textureID;
+	Renderer::info.skybox_VAO_RendererID = skyboxVAO;
 }

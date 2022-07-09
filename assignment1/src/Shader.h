@@ -42,5 +42,6 @@ private:
 	uint32_t m_Renderer2DID;
 	std::string m_Name;
 	std::string filepath;
+	std::unordered_map<std::string, int> uniformCache;
 };
 
