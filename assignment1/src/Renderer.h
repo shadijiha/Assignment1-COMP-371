@@ -1,22 +1,14 @@
 #pragma once
 #include <Camera.h>
 #include <Shader.h>
-
-#include "Texture.h"
+#include "util/Texture.h"
+#include "util/VertexArray.h"
 
 struct Light;
 
 // Unsed to store RendererIDs in Renderer class
 struct RendererInfo {
-	uint32_t cube_rendererID;
-	uint32_t cube_size;
-	uint32_t cube_count;
-	uint32_t cube_indexCount;
-
-	uint32_t quad_rendererID;
-	uint32_t quad_size;
-	uint32_t quad_count;
-	uint32_t quad_indexCount;
+	std::shared_ptr<VertexArray> cube_vao;
 
 	uint32_t skybox_Text_RendererID;
 	uint32_t skybox_VAO_RendererID;
@@ -72,7 +64,8 @@ public:
 	static void drawCube(const glm::mat4& transform,
 						 const glm::vec4& color = WHITE,
 						 Shader& shader = *Renderer::shader,
-						 int mode = renderingMode);
+						 int mode = renderingMode,
+						 Texture& texture = *Renderer::whiteTexture);
 
 	/**
 	 * \brief Draws a grid depending on the Renderer::GridSize

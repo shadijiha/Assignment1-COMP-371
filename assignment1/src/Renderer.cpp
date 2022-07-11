@@ -5,6 +5,7 @@
 
 #include "Light.h"
 #include "stb_image/stb_image.h"
+#include "util/Texture.h"
 
 void Renderer::setCamera(Camera* camera)
 {
@@ -33,8 +34,7 @@ void Renderer::drawCube(const glm::vec3& pos, const glm::vec3& rot, const glm::v
 		glm::rotate(glm::mat4(1.0f), glm::radians(rot.z), { 0, 0, 1 })	*
 		glm::scale(glm::mat4(1.0), scale);
 
-	texture.bind();
-	drawCube(transform, color, shader, mode);
+	drawCube(transform, color, shader, mode, texture);
 }
 
 void Renderer::drawCube(const glm::vec3& pos, const RotationInfo& rotationData, const glm::vec3& scale,
@@ -52,7 +52,7 @@ void Renderer::drawCube(const glm::vec3& pos, const RotationInfo& rotationData, 
 	drawCube(transform, color, shader, mode);
 }
 
-void Renderer::drawCube(const glm::mat4& transform, const glm::vec4& color, Shader& shader, int mode) {
+void Renderer::drawCube(const glm::mat4& transform, const glm::vec4& color, Shader& shader, int mode, Texture& texture) {
 	shader.bind();
 	shader.setFloat4("u_Color", color);
 	shader.setMat4("u_ViewProjection", camera->getViewProjection());
@@ -64,18 +64,21 @@ void Renderer::drawCube(const glm::mat4& transform, const glm::vec4& color, Shad
 	shader.setInt("ourTexture", 0);
 
 	/* Push each element in buffer_vertices to the vertex shader */
-	glBindVertexArray(Renderer::info.cube_rendererID);
-	glDrawArrays(mode, 0, Renderer::info.cube_count);
+	texture.bind();
+	info.cube_vao->bind();
+	glDrawArrays(mode, 0, info.cube_vao->getCount());
 }
 
 void Renderer::drawGrid()
 {
+	static std::shared_ptr<Texture> snow = std::make_shared<Texture>("shaders/snow.png");
+
 	// Draw x y yellow grid
 	constexpr float gridDim = 1;
 	const int countPerAxis = GridSize;
 	for (int i = -countPerAxis/2; i < countPerAxis/2; i++) {
 		for(int j = -countPerAxis / 2; j < countPerAxis / 2; j++)
-			Renderer::drawCube({ i, 0, j}, { 0, 0, 0 }, { gridDim, 0.01, gridDim }, {1, 1, 0, 1}, *Renderer::shader, GL_LINES);
+			Renderer::drawCube({ i, 0, j}, { 0, 0, 0 }, { gridDim, 0.01, gridDim }, {1, 1, 1, 1}, *Renderer::shader, GL_TRIANGLES, *snow);
 	}
 
 
@@ -111,86 +114,71 @@ void Renderer::drawSkyBox() {
  */
 void Renderer::init()
 {
+	RendererInfo i;
+	Renderer::info = i;
+
 	uint32_t whiteTextureData = 0xffffffff;
 	whiteTexture = new Texture(1, 1);
 	whiteTexture->setData(&whiteTextureData, sizeof(uint32_t));
 
 	//******************** CUBE Stuff ********************
 	float vertices[] = {
-		// Position			  // Normals			// Texture Coords
-		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,	  0.0f, 0.0f,
-		 0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,	 1.0f, 0.0f,
-		 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,	 1.0f, 1.0f,
-		 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,	 0.0f, 1.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,	 1.0f, 0.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,	 1.0f, 1.0f
+		// positions          // normals           // texture coords
+		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  0.0f,
+		 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
+		 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
 
-		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,	 0.0f, 0.0f,
-		 0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,	 1.0f, 1.0f,
-		 0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,	 0.0f, 1.0f,
-		 0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,	 0.0f, 1.0f,
-		-0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,	 0.0f, 0.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,	 1.0f, 0.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  0.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
 
-		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,	 0.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,	 1.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,	 0.0f, 1.0f, 
-		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,	 0.0f, 0.0f,
-		-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,	 1.0f, 0.0f,
-		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,	 1.0f, 1.0f,
+		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+		-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
+		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+		-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
+		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
 
-		 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,	 0.0f, 1.0f,
-		 0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,	 0.0f, 0.0f,
-		 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,	 1.0f, 0.0f,
-		 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,	 0.0f, 1.0f,
-		 0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,	 1.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,	 1.0f, 1.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
 
-		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,	 1.0f, 0.0f,
-		 0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,	 0.0f, 1.0f,
-		 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,	 0.0f, 0.0f,
-		 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,	 1.0f, 0.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,	 1.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,	 0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  1.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  0.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
 
-		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,	 1.0f, 0.0f,
-		 0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,	 0.0f, 1.0f,
-		 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,	 0.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,	 1.0f, 1.0f,
-		-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,	 0.0f, 1.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,	 1.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,
+		 0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  1.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f
 	};
 
 	// first, configure the cube's VAO (and VBO)
-	unsigned int VBO, cubeVAO;
-	glGenVertexArrays(1, &cubeVAO);
-	glGenBuffers(1, &VBO);
+	info.cube_vao = std::make_shared<VertexArray>();
+	info.cube_vao->setCount(36);
 
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	std::shared_ptr<VertexBuffer> buffer = std::make_shared<VertexBuffer>(vertices, sizeof(vertices));
+	buffer->setLayout({
+		{ ShaderDataType::Float3, "a_Position"},
+		{ ShaderDataType::Float3, "a_Normal"},
+		{ ShaderDataType::Float2, "a_TexCoord"},
+	});
 
-	glBindVertexArray(cubeVAO);
-
-	// position attribute
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-
-	// normal attribute
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-
-	// Texture coords attribute
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(2 * sizeof(float)));
-	glEnableVertexAttribArray(2);
-
-	RendererInfo info;
-	info.cube_size = sizeof(vertices);
-	info.cube_rendererID = cubeVAO;
-	info.cube_count = sizeof(vertices) / sizeof(GLfloat) / 6;
-	info.cube_indexCount = -1;//sizeof(cube_indices) / sizeof(GLuint);
-
-
-	Renderer::info = info;
+	info.cube_vao->addVertexBuffer(buffer);	
 
 	Renderer::initCubeMap();
 }
