@@ -72,8 +72,6 @@ void SceneManager::run()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// Draw x, y grid and skybox
-		
-		Renderer::drawGrid();
 		onUpdate(dt);
 		
 		// skybox cube
@@ -89,9 +87,14 @@ void SceneManager::run()
 
 void SceneManager::onCreate()
 {
+	olaf = new Olaf;
+	olaf->onCreate(*this);
+
+	grid = new Grid(100);
+
 	camera.setRotation({ 30.0f, 30.0f, 0 });
 	camera.setPosition({ -3, 4, 10 });
-	olaf.onCreate(*this);
+	
 
 	constexpr float camSpeed = 0.08f;
 	constexpr float camRotSpeed = 5.0f; // Degress
@@ -175,7 +178,8 @@ void SceneManager::onUpdate(float dt)
 {
 	lastDt = dt;
 	camera.onUpdate(dt);
-	olaf.onUpdate(dt);
+	olaf->onUpdate(dt);
+	grid->onUpdate(dt);
 }
 
 void SceneManager::onUI() {
@@ -205,12 +209,12 @@ void SceneManager::onUI() {
 	// Olaf settings
 	bool openOlaf = ImGui::TreeNodeEx((void*)typeid(Olaf).hash_code(), treeNodeFlags, "Olaf settings");
 	if (openOlaf) {
-		ImGui::DragFloat3("position (Shift + w,a,s,d) ", (float*)&olaf.position);
-		ImGui::DragFloat3("rotation (a, d): ", (float*)&olaf.rotation);
-		ImGui::DragFloat("scale: (u, j)", &olaf.scale);
+		ImGui::DragFloat3("position (Shift + w,a,s,d) ", (float*)&olaf->position);
+		ImGui::DragFloat3("rotation (a, d): ", (float*)&olaf->rotation);
+		ImGui::DragFloat("scale: (u, j)", &olaf->scale);
 		
 		if (ImGui::Button("random position"))
-			olaf.randomPosition();
+			olaf->randomPosition();
 
 		ImGui::TreePop();
 	}
@@ -229,7 +233,9 @@ void SceneManager::onUI() {
 	// Grid size
 	bool openGrid = ImGui::TreeNodeEx((void*)typeid(Renderer).hash_code(), treeNodeFlags, "Grid settings");
 	if (openGrid) {
-		ImGui::DragInt("Grid count ", &Renderer::GridSize);
+		int count = grid->getCount();
+		if (ImGui::DragInt("Grid count ", &count))
+			grid->regenerate(count);
 
 		// Select menu to change Rendering mode
 		static int selected_radio = 0;
@@ -286,7 +292,11 @@ void SceneManager::onUI() {
 
 void SceneManager::onDestroyed()
 {
-	olaf.onDestroyed();
+	olaf->onDestroyed();
+	grid->onDestroyed();
+
+	delete olaf;
+	delete grid;
 
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();

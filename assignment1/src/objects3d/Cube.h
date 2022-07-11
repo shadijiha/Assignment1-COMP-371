@@ -20,11 +20,11 @@ public:
 
 	void setShader(std::shared_ptr<Shader> shader) { this->shader = shader; }
 
-	static void initVAO();
+	static bool initVAO();
 private:
 	std::shared_ptr<VertexArray> vao;
 	std::shared_ptr<Shader> shader;
 
 	inline static std::shared_ptr<VertexArray> GlobalVAO = nullptr;
-	inline static std::shared_ptr<VertexArray> GlobalShader = nullptr;
+	inline static std::shared_ptr<Shader> GlobalShader = nullptr;
 };

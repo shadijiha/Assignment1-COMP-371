@@ -61,7 +61,28 @@ void Olaf::onCreate(SceneManager& manager)
 	});
 
 	// Create the Olaf
-	root = std::make_shared<Cube>(position);
+	glm::vec3 rootPos = position;
+	glm::vec3 rootScale = glm::vec3{ 3, 3, 1 } * scale;
+	glm::vec3 feetScale = glm::vec3{ 1, 1, 1 } * scale;
+	root = std::make_shared<Cube>(position, rotation, rootScale);
+	rootPos.y += rootPos.y + rootScale.y / 2 + feetScale.y;
+
+	// Feet
+	{
+		Cube leftFeet, rightFeet;
+		leftFeet.setParent(root);
+		rightFeet.setParent(root);
+
+		leftFeet.position = { rootScale.x * 0.25,  -1 * (rootScale.y / 2 + feetScale.y / 2) , 0};
+		leftFeet.scale = feetScale;
+
+		rightFeet.position = { -1 * (rootScale.x * 0.25), -1 * (rootScale.y / 2 + feetScale.y / 2) , 0};
+		rightFeet.scale = feetScale;
+
+		elements.push_back(leftFeet);
+		elements.push_back(rightFeet);
+	}
+
 }
 
 void Olaf::onUpdate(float dt)
@@ -72,9 +93,17 @@ void Olaf::onUpdate(float dt)
 	rootPos.y += rootPos.y + rootScale.y / 2 + feetScale.y;
 
 	// Root
-	Renderer::drawCube(rootPos, rotation, rootScale);
+	root->position = rootPos;
+	root->rotation = rotation;
+	root->scaleFactor = glm::vec3(scale);
+	root->onUpdate(dt);
+
+	for (auto element : elements) {
+		element.onUpdate(dt);
+	}
+
 	
-	// Feet
+	/*// Feet
 	{
 		glm::vec3 feetPos = rootPos;
 		feetPos.y -= rootScale.y / 2 + feetScale.y / 2;
@@ -139,7 +168,7 @@ void Olaf::onUpdate(float dt)
 
 		armsPos.x -= chestScale.x * 2;
 		Renderer::drawCube(armsPos, { rotation, rootPos }, -armsScale);
-	}
+	}*/
 }
 
 void Olaf::onDestroyed()
@@ -147,7 +176,7 @@ void Olaf::onDestroyed()
 }
 
 void Olaf::randomPosition() {
-	const int half = Renderer::GridSize / 2;
+	/*const int half = Renderer::GridSize / 2;
 	this->position = { rand() % Renderer::GridSize - half,
-			0, rand() % Renderer::GridSize - half };
+			0, rand() % Renderer::GridSize - half };*/
 }

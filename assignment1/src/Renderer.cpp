@@ -14,7 +14,7 @@ void Renderer::setCamera(Camera* camera)
 
 void Renderer::setDefaultShader(Shader* shader)
 {
-	Renderer::shader = shader;
+	//Renderer::shader = shader;
 }
 
 void Renderer::setDefaultRenderering(int mode)

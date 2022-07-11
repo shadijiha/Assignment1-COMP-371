@@ -2,10 +2,10 @@
 #include <vector>
 
 #include "Cube.h"
-#include "Renderable.h"
+#include "GameObject.h"
 
 
-class Grid : public Renderable
+class Grid : public GameObject
 {
 public:
 	Grid(uint32_t count);
@@ -17,7 +17,10 @@ public:
 
 	void regenerate(uint32_t count);
 
+	uint32_t getCount() const { return count; }
+
 private:
 	std::vector<Cube> elements;
+	uint32_t count;
 };
 

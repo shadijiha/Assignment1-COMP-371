@@ -8,6 +8,7 @@
 #include <Olaf.h>
 #include "KeyCodes.h"
 #include "Light.h"
+#include "objects3d/Grid.h"
 
 class SceneManager;
 
@@ -53,7 +54,8 @@ private:
 	Camera camera;
 	Shader* shader;
 	Light light;
-	Olaf olaf;
+	Olaf* olaf;
+	Grid* grid;
 
 	float lastDt = 0.0f;	
 };

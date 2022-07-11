@@ -17,6 +17,8 @@ void Grid::onDestroyed() {
 }
 
 void Grid::regenerate(uint32_t count) {
+	this->count = count;
+
 	elements.clear();
 	elements.reserve(count * count);
 
@@ -26,8 +28,8 @@ void Grid::regenerate(uint32_t count) {
 	for (int i = -countPerAxis / 2; i < countPerAxis / 2; i++) {
 		for (int j = -countPerAxis / 2; j < countPerAxis / 2; j++) {
 			Cube cube({ i, 0, j }, { 0, 0, 0 }, { gridDim, 0.01, gridDim });
-			cube.setColor({ 1, 1, 0, 1 });
-			cube.setRenderingMode(RenderingMode::Triangles);
+			cube.color = { 1, 1, 0, 1 };
+			cube.renderingMode = RenderingMode::Lines;
 			elements.push_back(cube);
 		}
 	}
