@@ -59,6 +59,9 @@ void Olaf::onCreate(SceneManager& manager)
 		if (action == RELEASE)
 			randomPosition();
 	});
+
+	// Create the Olaf
+	root = std::make_shared<Cube>(position);
 }
 
 void Olaf::onUpdate(float dt)
