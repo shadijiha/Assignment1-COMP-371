@@ -2,6 +2,8 @@
 #include <Camera.h>
 #include <Shader.h>
 
+#include "Texture.h"
+
 struct Light;
 
 // Unsed to store RendererIDs in Renderer class
@@ -49,7 +51,8 @@ public:
 						 const glm::vec3& scale = ONE,
 						 const glm::vec4& color = WHITE,
 						 Shader& shader = *Renderer::shader,
-						 int mode = renderingMode);
+						 int mode = renderingMode,
+						 Texture& texture = *Renderer::whiteTexture);
 
 	/**
 	 * \brief Draws cube at selected cube. You can specify the rotaion Origin with this function
@@ -102,6 +105,7 @@ private:
 	inline static Light* light = nullptr;
 	inline static Shader* shader = nullptr;		// Default shader
 	inline static Shader* skyboxShader = nullptr;		// Skybox shader
+	inline static Texture* whiteTexture = nullptr;
 	inline static int renderingMode = 0x0004;
 	inline static RendererInfo info;
 

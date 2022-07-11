@@ -5,6 +5,7 @@
 
 layout(location = 0) in vec3 a_Position;
 layout(location = 1) in vec3 a_Normal;
+layout (location = 2) in vec2 a_TexCoord;
 
 uniform vec4 u_Color;
 uniform mat4 u_ViewProjection;
@@ -13,9 +14,11 @@ uniform mat4 u_Transform;
 out vec4 v_Color;
 out vec4 v_Normal;
 out vec3 v_FragPos; // for the light
+out vec2 v_TexCoord;
 
 void main()
 {
+    v_TexCoord = a_TexCoord;
     v_Color = u_Color;
     v_Normal = u_Transform * vec4(a_Normal, 1.0);
     v_FragPos = vec3(u_Transform * vec4(a_Position, 1.0));
@@ -31,10 +34,12 @@ layout(location = 0) out vec4 a_Color;
 in vec4 v_Color;
 in vec4 v_Normal; 
 in vec3 v_FragPos; 
+in vec2 v_TexCoord;
 
 uniform vec3 u_LightPosition;
 uniform float u_AmbientStrength;
 uniform vec4 u_LightColor;
+uniform sampler2D ourTexture;
 
 void main()
 {
@@ -45,7 +50,7 @@ void main()
     vec3 lightDir = normalize(u_LightPosition - v_FragPos);
     float diff = max(dot(norm.xyz, lightDir), 0.0);
     vec3 diffuse = diff * lightColor;
-    vec4 result = vec4(ambient + diffuse, 1.0) * v_Color;
+    vec4 result = vec4(ambient + diffuse, 1.0) * texture(ourTexture, v_TexCoord) * v_Color;
     a_Color = result;
 
 }
