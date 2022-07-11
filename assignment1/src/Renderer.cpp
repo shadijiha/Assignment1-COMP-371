@@ -7,12 +7,12 @@
 #include "stb_image/stb_image.h"
 #include "util/Texture.h"
 
-void Renderer::setCamera(Camera* camera)
+void Renderer::setCamera(std::shared_ptr<Camera> camera)
 {
 	Renderer::camera = camera;
 }
 
-void Renderer::setDefaultShader(Shader* shader)
+void Renderer::setDefaultShader(std::shared_ptr<Shader> shader)
 {
 	Renderer::shader = shader;
 }
@@ -22,7 +22,7 @@ void Renderer::setDefaultRenderering(int mode)
 	Renderer::renderingMode = mode;
 }
 
-void Renderer::setLight(Light* light) {
+void Renderer::setLight(std::shared_ptr<Light> light) {
 	Renderer::light = light;
 }
 
@@ -118,7 +118,7 @@ void Renderer::init()
 	Renderer::info = i;
 
 	uint32_t whiteTextureData = 0xffffffff;
-	whiteTexture = new Texture(1, 1);
+	whiteTexture = std::make_shared<Texture>(1, 1);
 	whiteTexture->setData(&whiteTextureData, sizeof(uint32_t));
 
 	//******************** CUBE Stuff ********************
@@ -218,7 +218,7 @@ void Renderer::initCubeMap() {
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
 
-	skyboxShader = new Shader("shaders/skyboxShader.glsl");
+	skyboxShader = std::make_shared<Shader>("shaders/skyboxShader.glsl");
 
 	// Init VAO skybox
 	float skyboxVertices[] = {

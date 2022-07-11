@@ -24,10 +24,10 @@ public:
 		RotationInfo(glm::vec3 rotation, glm::vec3 origin): rotation(rotation), origin(origin) {}
 	};
 
-	static void setCamera(Camera* camera);
-	static void setDefaultShader(Shader* shader);
+	static void setCamera(std::shared_ptr<Camera> camera);
+	static void setDefaultShader(std::shared_ptr<Shader> shader);
 	static void setDefaultRenderering(int mode);
-	static void setLight(Light* light);
+	static void setLight(std::shared_ptr<Light> light);
 
 	/**
 	 * \brief Draw a cube at selected location, rotation, scale, colour
@@ -94,11 +94,11 @@ private:
 	static void initCubeMap();
 
 private:
-	inline static Camera* camera = nullptr;
-	inline static Light* light = nullptr;
-	inline static Shader* shader = nullptr;		// Default shader
-	inline static Shader* skyboxShader = nullptr;		// Skybox shader
-	inline static Texture* whiteTexture = nullptr;
+	inline static std::shared_ptr<Camera> camera = nullptr;
+	inline static std::shared_ptr<Light> light = nullptr;
+	inline static std::shared_ptr<Shader> shader = nullptr;		// Default shader
+	inline static std::shared_ptr<Shader> skyboxShader = nullptr;		// Skybox shader
+	inline static std::shared_ptr<Texture> whiteTexture = nullptr;
 	inline static int renderingMode = 0x0004;
 	inline static RendererInfo info;
 

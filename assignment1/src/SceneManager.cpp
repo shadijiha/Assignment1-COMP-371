@@ -11,7 +11,7 @@ static void handleErrors(GLenum source, GLenum type, GLuint id,
 
 
 SceneManager::SceneManager(uint32_t width, uint32_t height)
-	: camera(*this, width, height)
+	: width(width), height(height)
 {
 	// Init GLFW and OpenGL
 	/* Initialize the library */
@@ -42,13 +42,6 @@ SceneManager::SceneManager(uint32_t width, uint32_t height)
 
 	glfwSetWindowUserPointer(window, data);
 
-	// Default renderer settings
-	shader = new Shader("shaders/shader.glsl");
-
-	Renderer::init();
-	Renderer::setCamera(&camera);
-	Renderer::setDefaultShader(shader);
-	Renderer::setLight(&light);
 }
 
 SceneManager::~SceneManager()
@@ -89,8 +82,18 @@ void SceneManager::run()
 
 void SceneManager::onCreate()
 {
-	camera.setRotation({ 30.0f, 30.0f, 0 });
-	camera.setPosition({ -3, 4, 10 });
+	// Default renderer settings
+	camera = std::make_shared<Camera>(*this, width, height);
+	shader = std::make_shared<Shader>("shaders/shader.glsl");
+	light = std::make_shared<Light>();
+
+	Renderer::init();
+	Renderer::setCamera(camera);
+	Renderer::setDefaultShader(shader);
+	Renderer::setLight(light);
+
+	camera->setRotation({ 30.0f, 30.0f, 0 });
+	camera->setPosition({ -3, 4, 10 });
 	olaf.onCreate(*this);
 
 	constexpr float camSpeed = 0.08f;
@@ -174,7 +177,7 @@ void SceneManager::onCreate()
 void SceneManager::onUpdate(float dt)
 {
 	lastDt = dt;
-	camera.onUpdate(dt);
+	camera->onUpdate(dt);
 	olaf.onUpdate(dt);
 }
 
@@ -191,9 +194,9 @@ void SceneManager::onUI() {
 	ImGui::Begin("Controls");
 
 	if (ImGui::IsWindowHovered())
-		camera.enableMouseZoom(false);
+		camera->enableMouseZoom(false);
 	else
-		camera.enableMouseZoom(true);
+		camera->enableMouseZoom(true);
 
 	ImGui::Text("You can use these controls or the Key shortcuts");
 
@@ -218,11 +221,11 @@ void SceneManager::onUI() {
 	// Camera settings
 	bool openCam = ImGui::TreeNodeEx((void*)typeid(Camera).hash_code(), treeNodeFlags, "Camera settings");
 	if (openCam) {
-		if (ImGui::DragFloat3("position ", (float*)&camera.position))
-			camera.recalculateMatrix();
+		if (ImGui::DragFloat3("position ", (float*)&camera->position))
+			camera->recalculateMatrix();
 
-		if (ImGui::DragFloat3("rotation (arrow keys)", (float*)&camera.rotation))
-			camera.recalculateMatrix();
+		if (ImGui::DragFloat3("rotation (arrow keys)", (float*)&camera->rotation))
+			camera->recalculateMatrix();
 		ImGui::TreePop();
 	}
 
@@ -261,9 +264,9 @@ void SceneManager::onUI() {
 	// Light settings
 	bool openLight = ImGui::TreeNodeEx((void*)typeid(Light).hash_code(), treeNodeFlags, "Light settings");
 	if (openLight) {
-		ImGui::DragFloat3("position ", (float*) &light.position);
-		ImGui::ColorEdit4("colour ", (float*)&light.color);
-		ImGui::DragFloat("ambiant strength ", &light.ambientStrength, 0.01);
+		ImGui::DragFloat3("position ", (float*) &light->position);
+		ImGui::ColorEdit4("colour ", (float*)&light->color);
+		ImGui::DragFloat("ambiant strength ", &light->ambientStrength, 0.01);
 
 		ImGui::TreePop();
 	}
@@ -292,7 +295,6 @@ void SceneManager::onDestroyed()
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
 
-	delete shader;
 	delete (GLFWwindow*)glfwGetWindowUserPointer(window);
 	glfwDestroyWindow(window);
 	glfwTerminate();

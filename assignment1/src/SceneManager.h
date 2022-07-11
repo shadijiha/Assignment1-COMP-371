@@ -35,7 +35,7 @@ public:
 
 	void addKeyEvent(int key, KeyEvent func);
 
-	Camera& getCamera() { return camera; }
+	Camera& getCamera() { return *camera; }
 	GLFWwindow* getWindow() { return window; }
 
 	bool isKeyDown(KeyCode keyCode) const;
@@ -50,10 +50,12 @@ private:
 	std::vector<std::pair<int, KeyEvent>> keyEvents;
 
 	GLFWwindow* window;
-	Camera camera;
-	Shader* shader;
-	Light light;
+	std::shared_ptr<Camera> camera;
+	std::shared_ptr<Shader> shader;
+	std::shared_ptr<Light> light;
 	Olaf olaf;
+
+	uint32_t width, height;
 
 	float lastDt = 0.0f;	
 };
