@@ -9,81 +9,61 @@ Olaf::Olaf()
 
 void Olaf::onCreate(SceneManager& manager)
 {
-	// Movement and rotation
-	constexpr float speed = 0.1;
-	manager.addKeyEvent(GLFW_KEY_D, [this, speed](SceneManager& scene, WindowUserData& data, KeyAction action) {
-		if (scene.isShiftPressed()) {
-			this->position.x += speed;
-		}
-		else
-		{
-			this->rotation.y += 5;
-		}
-	});
-
-	manager.addKeyEvent(GLFW_KEY_A, [this, speed](SceneManager& scene, WindowUserData& data, KeyAction action) {
-		if (scene.isShiftPressed()) {
-			this->position.x -= speed;
-		}
-		else
-		{
-			this->rotation.y += -5;
-		}
-	});
-
-	manager.addKeyEvent(GLFW_KEY_W, [this, speed](SceneManager& scene, WindowUserData& data, KeyAction action) {
-		if (scene.isShiftPressed()) {
-			this->position.z -= speed;
-		}
-	});
-	manager.addKeyEvent(GLFW_KEY_S, [this, speed](SceneManager& scene, WindowUserData& data, KeyAction action) {
-		if (scene.isShiftPressed()) {
-			this->position.z += speed;
-		}
-	});
-
-
-	// Scalling
-	manager.addKeyEvent(GLFW_KEY_U,  [this](SceneManager& manager, WindowUserData& data, KeyAction action) {
-		if (action == RELEASE)
-			this->scale += 0.5f;
-	});
-
-	manager.addKeyEvent(GLFW_KEY_J, [this](SceneManager& manager, WindowUserData& data, KeyAction action) {
-		if (action == RELEASE)
-			this->scale -= 0.5f;
-	});
-
-	// Random position
-	manager.addKeyEvent(GLFW_KEY_SPACE, [this](SceneManager& manager, WindowUserData& data, KeyAction action) {
-		if (action == RELEASE)
-			randomPosition();
-	});
+	listenToEvent(manager);
 
 	// Create the Olaf
 	glm::vec3 rootPos = position;
-	glm::vec3 rootScale = glm::vec3{ 3, 3, 1 } * scale;
-	glm::vec3 feetScale = glm::vec3{ 1, 1, 1 } * scale;
-	root = std::make_shared<Cube>(position, rotation, rootScale);
+	glm::vec3 rootScale = glm::vec3{ 3, 3, 1 } *scale;
+	glm::vec3 feetScale = glm::vec3{ 1, 1, 1 } *scale;
 	rootPos.y += rootPos.y + rootScale.y / 2 + feetScale.y;
+
+	root = std::make_shared<Cube>(rootPos, rotation, rootScale);
+	root->rotationOrigin = rootPos;
 
 	// Feet
 	{
-		Cube leftFeet, rightFeet;
-		leftFeet.setParent(root);
-		rightFeet.setParent(root);
+		std::shared_ptr<Cube> leftFeet = std::make_shared<Cube>();
+		std::shared_ptr<Cube> rightFeet = std::make_shared<Cube>();
 
-		leftFeet.position = { rootScale.x * 0.25,  -1 * (rootScale.y / 2 + feetScale.y / 2) , 0};
-		leftFeet.scale = feetScale;
+		leftFeet->setParent(root);
+		rightFeet->setParent(root);
 
-		rightFeet.position = { -1 * (rootScale.x * 0.25), -1 * (rootScale.y / 2 + feetScale.y / 2) , 0};
-		rightFeet.scale = feetScale;
+		leftFeet->position = { rootScale.x * 0.25,  -1 * (rootScale.y / 2 + feetScale.y / 2) , 0 };
+		leftFeet->scale = feetScale;
+
+		rightFeet->position = { -1 * (rootScale.x * 0.25), -1 * (rootScale.y / 2 + feetScale.y / 2) , 0 };
+		rightFeet->scale = feetScale;
 
 		elements.push_back(leftFeet);
 		elements.push_back(rightFeet);
 	}
 
+	// Chest and head
+	{
+		// Chest
+		auto chest = std::make_shared<Cube>();
+		chest->setParent(root);
+
+		auto chestScale = rootScale * 0.7f;
+		chestScale.y *= 0.6;
+		chest->position = { 0, rootScale.y / 2 + chestScale.y / 2 , 0 };
+		chest->scale = chestScale;
+
+		elements.push_back(chest);
+
+		// Head
+		auto head = std::make_shared<Cube>();
+		head->setParent(chest);
+		auto headScale = chestScale * 0.8f;
+
+		head->position = { 0,chestScale.y / 2 + headScale.y / 2, 0 };
+		head->scale = headScale;
+
+		elements.push_back(head);
+	}
 }
+
+
 
 void Olaf::onUpdate(float dt)
 {
@@ -96,10 +76,11 @@ void Olaf::onUpdate(float dt)
 	root->position = rootPos;
 	root->rotation = rotation;
 	root->scaleFactor = glm::vec3(scale);
+	root->rotationOrigin = rootPos;
 	root->onUpdate(dt);
 
 	for (auto element : elements) {
-		element.onUpdate(dt);
+		element->onUpdate(dt);
 	}
 
 	
@@ -179,4 +160,55 @@ void Olaf::randomPosition() {
 	/*const int half = Renderer::GridSize / 2;
 	this->position = { rand() % Renderer::GridSize - half,
 			0, rand() % Renderer::GridSize - half };*/
+}
+
+void Olaf::listenToEvent(SceneManager& manager) {
+	// Movement and rotation
+	constexpr float speed = 0.1;
+	manager.addKeyEvent(GLFW_KEY_D, [this, speed](SceneManager& scene, WindowUserData& data, KeyAction action) {
+		if (scene.isShiftPressed()) {
+			this->position.x += speed;
+		} else
+		{
+			this->rotation.y += 5;
+		}
+		});
+
+	manager.addKeyEvent(GLFW_KEY_A, [this, speed](SceneManager& scene, WindowUserData& data, KeyAction action) {
+		if (scene.isShiftPressed()) {
+			this->position.x -= speed;
+		} else
+		{
+			this->rotation.y += -5;
+		}
+		});
+
+	manager.addKeyEvent(GLFW_KEY_W, [this, speed](SceneManager& scene, WindowUserData& data, KeyAction action) {
+		if (scene.isShiftPressed()) {
+			this->position.z -= speed;
+		}
+		});
+	manager.addKeyEvent(GLFW_KEY_S, [this, speed](SceneManager& scene, WindowUserData& data, KeyAction action) {
+		if (scene.isShiftPressed()) {
+			this->position.z += speed;
+		}
+		});
+
+
+	// Scalling
+	manager.addKeyEvent(GLFW_KEY_U, [this](SceneManager& manager, WindowUserData& data, KeyAction action) {
+		if (action == RELEASE)
+			this->scale += 0.5f;
+		});
+
+	manager.addKeyEvent(GLFW_KEY_J, [this](SceneManager& manager, WindowUserData& data, KeyAction action) {
+		if (action == RELEASE)
+			this->scale -= 0.5f;
+		});
+
+	// Random position
+	manager.addKeyEvent(GLFW_KEY_SPACE, [this](SceneManager& manager, WindowUserData& data, KeyAction action) {
+		if (action == RELEASE)
+			randomPosition();
+		});
 }

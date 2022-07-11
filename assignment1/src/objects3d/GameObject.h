@@ -8,6 +8,9 @@ enum class RenderingMode { Triangles, Lines, Points, LineLoop, Default };
 
 class GameObject {
 public:
+	GameObject() = default;
+	virtual ~GameObject() = default;
+
 	virtual void onCreate()			{}
 	virtual void onUpdate(float dt) {}
 	virtual void onDestroyed()		{}
@@ -17,17 +20,27 @@ public:
 
 
 	glm::mat4 getTransform() const {
-		auto scale = parent == nullptr ? this->scale * this->scaleFactor :  this->scale * parent->scaleFactor;
-		auto position = parent == nullptr ? this->position : this->position + parent->position;
-		auto rotation = parent == nullptr ? this->rotation : this->rotation + parent->rotation;
-		auto rotationOrigin = parent == nullptr ? this->rotationOrigin : parent->position;
-		return glm::translate(glm::mat4(1.0f), rotationOrigin)
+		glm::vec3 scale = this->scale *  this->scaleFactor;
+		glm::vec3 position = this->position;
+		glm::vec3 rotation = this->rotation;
+		glm::vec3 rotationOrigin = this->rotationOrigin;
+
+		/*if (parent) {
+			scale = this->scale * this->scaleFactor * parent->scaleFactor;
+			position = this->position + parent->position;
+			rotation = this->rotation + parent->rotation;
+			rotationOrigin = this->rotationOrigin + parent->rotationOrigin;
+		}		*/
+		
+		auto transform = glm::translate(glm::mat4(1.0f), rotationOrigin)
 			* glm::rotate(glm::mat4(1.0), glm::radians(rotation.x), { 1, 0, 0 })
 			* glm::rotate(glm::mat4(1.0), glm::radians(rotation.y), { 0, 1, 0 })
 			* glm::rotate(glm::mat4(1.0), glm::radians(rotation.z), { 0, 0, 1 })
 			* glm::translate(glm::mat4(1.0f), -rotationOrigin)
 			* glm::translate(glm::mat4(1.0), position)
 			* glm::scale(scale);
+
+		return parent == nullptr ? transform :  parent->getTransform() * transform;
 	}
 
 public:
@@ -42,3 +55,4 @@ public:
 protected:
 	std::shared_ptr<GameObject> parent = nullptr;	
 };
+
