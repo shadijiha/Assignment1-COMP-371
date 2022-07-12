@@ -5,6 +5,7 @@
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_glfw.h"
 #include "imgui/imgui_impl_opengl3.h"
+#include "util/UI.h"
 
 static void handleErrors(GLenum source, GLenum type, GLuint id,
 						 GLenum severity, GLsizei length, const GLchar* message, const void* userParam);
@@ -80,6 +81,7 @@ void SceneManager::run()
 	}
 }
 
+static void setupImGui(GLFWwindow* win);
 void SceneManager::onCreate()
 {
 	// Default renderer settings
@@ -150,28 +152,8 @@ void SceneManager::onCreate()
 		std::cout << 1 / lastDt << std::endl;
 	});
 
-	// Init ImGui
-	{
-		IMGUI_CHECKVERSION();
-		ImGui::CreateContext();
-		ImGuiIO& io = ImGui::GetIO(); (void)io;
-		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
-		//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
-
-		ImGui::StyleColorsDark();
-		ImGuiStyle& style = ImGui::GetStyle();
-		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-		{
-			style.WindowRounding = 0.0f;
-			style.Colors[ImGuiCol_WindowBg].w = 1.0f;
-		}
-
-		// Setup Platform/Renderer backends
-		const char* glsl_version = "#version 130";
-		ImGui_ImplGlfw_InitForOpenGL(window, true);
-		ImGui_ImplOpenGL3_Init(glsl_version);
-	}
+	
+	setupImGui(window);
 }
 
 void SceneManager::onUpdate(float dt)
@@ -200,77 +182,46 @@ void SceneManager::onUI() {
 
 	ImGui::Text("You can use these controls or the Key shortcuts");
 
-	// Draw sections
-	const ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap
-		| ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_FramePadding
-		| ImGuiTreeNodeFlags_AllowItemOverlap;
-
 	// Olaf settings
-	bool openOlaf = ImGui::TreeNodeEx((void*)typeid(Olaf).hash_code(), treeNodeFlags, "Olaf settings");
-	if (openOlaf) {
-		ImGui::DragFloat3("position (Shift + w,a,s,d) ", (float*)&olaf.position);
-		ImGui::DragFloat3("rotation (a, d): ", (float*)&olaf.rotation);
-		ImGui::DragFloat("scale: (u, j)", &olaf.scale);
-		
+	UI::drawTreeNode<Olaf>("Olaf settings", [this]() {
+		UI::drawVec3Control("position", olaf.position);
+		UI::drawVec3Control("rotation", olaf.rotation);
+		UI::drawVec1Control<float>("scale", olaf.scale);
+
 		if (ImGui::Button("random position"))
 			olaf.randomPosition();
-
-		ImGui::TreePop();
-	}
+	});
 
 	// Camera settings
-	bool openCam = ImGui::TreeNodeEx((void*)typeid(Camera).hash_code(), treeNodeFlags, "Camera settings");
-	if (openCam) {
-		if (ImGui::DragFloat3("position ", (float*)&camera->position))
+	UI::drawTreeNode<Camera>("Camera settings", [this]() {
+		if (UI::drawVec3Control("position", camera->position))
 			camera->recalculateMatrix();
 
-		if (ImGui::DragFloat3("rotation (arrow keys)", (float*)&camera->rotation))
+		if (UI::drawVec3Control("rotation", camera->rotation))
 			camera->recalculateMatrix();
-		ImGui::TreePop();
-	}
+	});
 
 	// Grid size
-	bool openGrid = ImGui::TreeNodeEx((void*)typeid(Renderer).hash_code(), treeNodeFlags, "Grid settings");
-	if (openGrid) {
-		ImGui::DragInt("Grid count ", &Renderer::GridSize);
+	UI::drawTreeNode<Renderer>("Grid settings", [this]() {
+		UI::drawVec1Control<int>("Grid count ", Renderer::GridSize, 0, 100);
 
 		// Select menu to change Rendering mode
-		static int selected_radio = 0;
+		static std::string currentSelection = "Triangles";
 
-		ImGui::PushID(0);
-		if (ImGui::RadioButton("Triangles", &selected_radio, 0))
-		{
-			Renderer::setDefaultRenderering(GL_TRIANGLES);
-		}
-		ImGui::PopID();
-
-		ImGui::PushID(1);
-		if (ImGui::RadioButton("Lines", &selected_radio, 1))
-		{
-			Renderer::setDefaultRenderering(GL_LINE_LOOP);
-		}
-		ImGui::PopID();
-
-		ImGui::PushID(2);
-		if (ImGui::RadioButton("Points", &selected_radio, 2))
-		{
-			Renderer::setDefaultRenderering(GL_POINTS);
-		}
-		ImGui::PopID();
-
-		ImGui::TreePop();
-	}
+		UI::drawDropDown("Type", {
+			{"Triangles", []() { Renderer::setDefaultRenderering(GL_TRIANGLES); }},
+			{"Line loop", []() { Renderer::setDefaultRenderering(GL_LINE_LOOP); }},
+			{"Points", []() { Renderer::setDefaultRenderering(GL_POINTS); }}
+		}, currentSelection);
+	});
 
 	// Light settings
-	bool openLight = ImGui::TreeNodeEx((void*)typeid(Light).hash_code(), treeNodeFlags, "Light settings");
-	if (openLight) {
-		ImGui::DragFloat3("position ", (float*) &light->position);
-		ImGui::ColorEdit4("colour ", (float*)&light->color);
-		ImGui::DragFloat("ambiant strength ", &light->ambientStrength, 0.01);
+	UI::drawTreeNode<Light>("Light settings", [this]() {
+		UI::drawVec3Control("position", light->position);
+		UI::drawColorControl("colour", light->color);
+		UI::drawVec1Control("ambiant strength", light->ambientStrength);
+	});
 
-		ImGui::TreePop();
-	}
-	
 	ImGui::End();
 
 
@@ -348,6 +299,74 @@ void SceneManager::listenToEvents(GLFWwindow* window) {
 			}
 		}
 	});
+}
+
+static void setupImGui(GLFWwindow* win) {
+	float xscale, yscale;
+	auto* monitor = glfwGetPrimaryMonitor();
+	glfwGetMonitorContentScale(monitor, &xscale, &yscale);
+
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
+	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
+	io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
+	//io.ConfigViewportsNoAutoMerge = true;
+	//io.ConfigViewportsNoTaskBarIcon = true;
+
+	io.Fonts->AddFontFromFileTTF("fonts/Open_Sans/OpenSans-Bold.ttf", 18.0f);
+	io.FontDefault = io.Fonts->AddFontFromFileTTF("fonts/Open_Sans/OpenSans-Regular.ttf", 18.0f);
+	io.FontGlobalScale = xscale;
+	ImGui::GetStyle().ScaleAllSizes(xscale);
+
+	// Setup Dear ImGui style
+	ImGui::StyleColorsDark();
+	//ImGui::StyleColorsClassic();
+
+	// When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
+	ImGuiStyle& style = ImGui::GetStyle();
+	if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+	{
+		style.WindowRounding = 0.0f;
+		style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+	}
+
+	auto& colors = ImGui::GetStyle().Colors;
+	colors[ImGuiCol_WindowBg] = ImVec4{ 0.1f, 0.105f, 0.11f, 1.0f };
+
+	// Headers
+	colors[ImGuiCol_Header] = ImVec4{ 0.2f, 0.205f, 0.21f, 1.0f };
+	colors[ImGuiCol_HeaderHovered] = ImVec4{ 0.3f, 0.305f, 0.31f, 1.0f };
+	colors[ImGuiCol_HeaderActive] = ImVec4{ 0.15f, 0.1505f, 0.151f, 1.0f };
+
+	// Buttons
+	colors[ImGuiCol_Button] = ImVec4{ 0.2f, 0.205f, 0.21f, 1.0f };
+	colors[ImGuiCol_ButtonHovered] = ImVec4{ 0.3f, 0.305f, 0.31f, 1.0f };
+	colors[ImGuiCol_ButtonActive] = ImVec4{ 0.15f, 0.1505f, 0.151f, 1.0f };
+
+	// Frame BG
+	colors[ImGuiCol_FrameBg] = ImVec4{ 0.2f, 0.205f, 0.21f, 1.0f };
+	colors[ImGuiCol_FrameBgHovered] = ImVec4{ 0.3f, 0.305f, 0.31f, 1.0f };
+	colors[ImGuiCol_FrameBgActive] = ImVec4{ 0.15f, 0.1505f, 0.151f, 1.0f };
+
+	// Tabs
+	colors[ImGuiCol_Tab] = ImVec4{ 0.15f, 0.1505f, 0.151f, 1.0f };
+	colors[ImGuiCol_TabHovered] = ImVec4{ 0.38f, 0.3805f, 0.381f, 1.0f };
+	colors[ImGuiCol_TabActive] = ImVec4{ 0.28f, 0.2805f, 0.281f, 1.0f };
+	colors[ImGuiCol_TabUnfocused] = ImVec4{ 0.15f, 0.1505f, 0.151f, 1.0f };
+	colors[ImGuiCol_TabUnfocusedActive] = ImVec4{ 0.2f, 0.205f, 0.21f, 1.0f };
+
+	// Title
+	colors[ImGuiCol_TitleBg] = ImVec4{ 0.15f, 0.1505f, 0.151f, 1.0f };
+	colors[ImGuiCol_TitleBgActive] = ImVec4{ 0.15f, 0.1505f, 0.151f, 1.0f };
+	colors[ImGuiCol_TitleBgCollapsed] = ImVec4{ 0.15f, 0.1505f, 0.151f, 1.0f };
+
+	// Setup Platform/Renderer backends
+	const char* glsl_version = "#version 130";
+ 	ImGui_ImplGlfw_InitForOpenGL(win, true);
+	ImGui_ImplOpenGL3_Init(glsl_version);
 }
 
 static void handleErrors(GLenum source,
