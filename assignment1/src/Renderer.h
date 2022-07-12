@@ -106,6 +106,7 @@ private:
 	inline static glm::vec3 ONE = glm::vec3(1);
 	inline static glm::vec4 WHITE = glm::vec4(1);
 public:
+	inline static bool textures = true;
 	inline static int GridSize = 100;
 };
 

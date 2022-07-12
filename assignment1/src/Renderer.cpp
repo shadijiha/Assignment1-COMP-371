@@ -64,7 +64,11 @@ void Renderer::drawCube(const glm::mat4& transform, const glm::vec4& color, Shad
 	shader.setInt("ourTexture", 0);
 
 	/* Push each element in buffer_vertices to the vertex shader */
-	texture.bind();
+	if (textures)
+		texture.bind();
+	else
+		Renderer::whiteTexture->bind();
+
 	info.cube_vao->bind();
 	glDrawArrays(mode, 0, info.cube_vao->getCount());
 }
@@ -77,8 +81,12 @@ void Renderer::drawGrid()
 	constexpr float gridDim = 1;
 	const int countPerAxis = GridSize;
 	for (int i = -countPerAxis/2; i < countPerAxis/2; i++) {
-		for(int j = -countPerAxis / 2; j < countPerAxis / 2; j++)
-			Renderer::drawCube({ i, 0, j}, { 0, 0, 0 }, { gridDim, 0.01, gridDim }, {1, 1, 1, 1}, *Renderer::shader, GL_TRIANGLES, *snow);
+		for(int j = -countPerAxis / 2; j < countPerAxis / 2; j++) {
+			int mode = textures ? GL_TRIANGLES : GL_LINES;
+			glm::vec4 color = textures ? glm::vec4{1, 1, 1, 1} : glm::vec4{1, 1, 0, 1};
+			Renderer::drawCube({ i, 0, j }, { 0, 0, 0 }, { gridDim, 0.01, gridDim }, color, *Renderer::shader, mode, *snow);
+		}
+			
 	}
 
 

@@ -152,6 +152,10 @@ void SceneManager::onCreate()
 		std::cout << 1 / lastDt << std::endl;
 	});
 
+	addKeyEvent(GLFW_KEY_B, [this](SceneManager& scene, WindowUserData& data, KeyAction action) {
+		Renderer::textures = false;
+	});
+
 	
 	setupImGui(window);
 }
@@ -175,8 +179,9 @@ void SceneManager::onUI() {
 	// UI Code goes here
 	ImGui::Begin("Controls");
 
-	if (ImGui::IsWindowHovered())
+	if (ImGui::IsWindowHovered() || ImGui::IsWindowFocused()) {
 		camera->enableMouseZoom(false);
+	}		
 	else
 		camera->enableMouseZoom(true);
 
@@ -207,12 +212,17 @@ void SceneManager::onUI() {
 
 		// Select menu to change Rendering mode
 		static std::string currentSelection = "Triangles";
-
 		UI::drawDropDown("Type", {
 			{"Triangles", []() { Renderer::setDefaultRenderering(GL_TRIANGLES); }},
 			{"Line loop", []() { Renderer::setDefaultRenderering(GL_LINE_LOOP); }},
 			{"Points", []() { Renderer::setDefaultRenderering(GL_POINTS); }}
 		}, currentSelection);
+
+		static std::string texturesCurrentSelection = "On";
+		UI::drawDropDown("Textures", {
+			{"On", []() { Renderer::textures = true; }},
+			{"Off", []() { Renderer::textures = false; }},
+			}, texturesCurrentSelection);
 	});
 
 	// Light settings
