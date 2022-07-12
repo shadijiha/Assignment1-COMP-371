@@ -137,15 +137,15 @@ void SceneManager::onCreate()
 	});
 
 	addKeyEvent(GLFW_KEY_P, [](SceneManager& scene, WindowUserData& data, KeyAction action) {
-		Renderer::setDefaultRenderering(GL_POINTS);
+		Renderer::setDefaultRenderering(RenderingMode::Points);
 	});
 
 	addKeyEvent(GLFW_KEY_L, [](SceneManager& scene, WindowUserData& data, KeyAction action) {
-		Renderer::setDefaultRenderering(GL_LINE_LOOP);
+		Renderer::setDefaultRenderering(RenderingMode::LineLoop);
 		});
 
 	addKeyEvent(GLFW_KEY_T, [](SceneManager& scene, WindowUserData& data, KeyAction action) {
-		Renderer::setDefaultRenderering(GL_TRIANGLES);
+		Renderer::setDefaultRenderering(RenderingMode::Triangles);
 	});
 
 	addKeyEvent(GLFW_KEY_Z, [this](SceneManager& scene, WindowUserData& data, KeyAction action) {
@@ -214,9 +214,9 @@ void SceneManager::onUI() {
 		// Select menu to change Rendering mode
 		static std::string currentSelection = "Triangles";
 		UI::drawDropDown("Type", {
-			{"Triangles", []() { Renderer::setDefaultRenderering(GL_TRIANGLES); }},
-			{"Line loop", []() { Renderer::setDefaultRenderering(GL_LINE_LOOP); }},
-			{"Points", []() { Renderer::setDefaultRenderering(GL_POINTS); }}
+			{"Triangles", []() { Renderer::setDefaultRenderering(RenderingMode::Triangles); }},
+			{"Line loop", []() { Renderer::setDefaultRenderering(RenderingMode::LineLoop); }},
+			{"Points", []() { Renderer::setDefaultRenderering(RenderingMode::Points); }}
 		}, currentSelection);
 
 		static std::string texturesCurrentSelection = "On";

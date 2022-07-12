@@ -14,19 +14,18 @@ struct RendererInfo {
 	uint32_t skybox_VAO_RendererID;
 };
 
+enum class RenderingMode {
+	Triangles, LineLoop, Lines, Points, Default
+};
+
+
+struct RenderingOptions;
 class Renderer
 {
 public:
-	struct RotationInfo {
-		glm::vec3 rotation;
-		glm::vec3 origin;
-
-		RotationInfo(glm::vec3 rotation, glm::vec3 origin): rotation(rotation), origin(origin) {}
-	};
-
 	static void setCamera(std::shared_ptr<Camera> camera);
 	static void setDefaultShader(std::shared_ptr<Shader> shader);
-	static void setDefaultRenderering(int mode);
+	static void setDefaultRenderering(RenderingMode mode);
 	static void setLight(std::shared_ptr<Light> light);
 
 	/**
@@ -38,33 +37,21 @@ public:
 	 * \param shader Loaded shader
 	 * \param mode OpenGL rendering mode (triangles, lines, etc.)
 	 */
-	static void drawCube(const glm::vec3& pos = ZERO,
-						 const glm::vec3& rot = ZERO,
-						 const glm::vec3& scale = ONE,
-						 const glm::vec4& color = WHITE,
-						 Shader& shader = *Renderer::shader,
-						 int mode = renderingMode,
-						 Texture& texture = *Renderer::whiteTexture);
+	static void drawCube(const RenderingOptions& options);
 
-	/**
-	 * \brief Draws cube at selected cube. You can specify the rotaion Origin with this function
-	 * \param rotationData Rotaion angles and origine
-	 */
-	static void drawCube(const glm::vec3& pos = ZERO,
-						 const RotationInfo& rotationData = { ZERO , ZERO },
-						 const glm::vec3& scale = ONE,
-						 const glm::vec4& color = WHITE,
-						 Shader& shader = *Renderer::shader,
-						 int mode = renderingMode);
+	static void drawCube(const glm::vec3& pos,
+		const glm::vec3& rot,
+		const glm::vec3& rotOrigine,
+		const glm::vec3& scale = glm::vec3(1.0f), const glm::vec4& color = glm::vec4(1.0f));
 
 	/**
 	 * \brief Draw cube using transform matrix
 	 * \param transform 
 	 */
 	static void drawCube(const glm::mat4& transform,
-						 const glm::vec4& color = WHITE,
+						 const glm::vec4& color = glm::vec4(1),
 						 Shader& shader = *Renderer::shader,
-						 int mode = renderingMode,
+						 RenderingMode mode = renderingMode,
 						 Texture& texture = *Renderer::whiteTexture);
 
 	/**
@@ -85,7 +72,7 @@ public:
 	/**
 	 * \return current rendering mode (Triangles, Lines, etc.)
 	 */
-	inline static int getRenderingMode() { return renderingMode; }
+	inline static RenderingMode getRenderingMode() { return renderingMode; }
 
 private:
 	/**
@@ -99,7 +86,7 @@ private:
 	inline static std::shared_ptr<Shader> shader = nullptr;		// Default shader
 	inline static std::shared_ptr<Shader> skyboxShader = nullptr;		// Skybox shader
 	inline static std::shared_ptr<Texture> whiteTexture = nullptr;
-	inline static int renderingMode = 0x0004;
+	inline static RenderingMode renderingMode = RenderingMode::Triangles;
 	inline static RendererInfo info;
 
 	inline static glm::vec3 ZERO = glm::vec3(0);
@@ -108,5 +95,17 @@ private:
 public:
 	inline static bool textures = true;
 	inline static int GridSize = 100;
+
+	friend struct RenderingOptions;
 };
 
+struct RenderingOptions {
+	glm::vec3 position = glm::vec3(0);
+	glm::vec3 rotation = glm::vec3(0);
+	glm::vec3 scale = glm::vec3(1);
+	glm::vec3 rotationOrigin = position;
+	glm::vec4 color = glm::vec4(1);
+	std::shared_ptr<Shader> shader = Renderer::shader;
+	std::shared_ptr<Texture> texture = Renderer::whiteTexture;
+	RenderingMode mode = RenderingMode::Default;
+};

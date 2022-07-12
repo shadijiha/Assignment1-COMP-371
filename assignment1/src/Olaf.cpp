@@ -5,10 +5,13 @@
 
 Olaf::Olaf()
 {
+	
 }
 
 void Olaf::onCreate(SceneManager& manager)
 {
+	carrot = std::make_shared<Texture>("shaders/carrot.jpg");
+
 	// Movement and rotation
 	constexpr float speed = 0.1;
 	manager.addKeyEvent(GLFW_KEY_D, [this, speed](SceneManager& scene, WindowUserData& data, KeyAction action) {
@@ -69,16 +72,16 @@ void Olaf::onUpdate(float dt)
 	rootPos.y += rootPos.y + rootScale.y / 2 + feetScale.y;
 
 	// Root
-	Renderer::drawCube(rootPos, rotation, rootScale);
+	Renderer::drawCube(rootPos, rotation, rootPos, rootScale);
 	
 	// Feet
 	{
 		glm::vec3 feetPos = rootPos;
 		feetPos.y -= rootScale.y / 2 + feetScale.y / 2;
 		feetPos.x += rootScale.x * 0.25;
-		Renderer::drawCube(feetPos, { rotation, rootPos }, feetScale);
+		Renderer::drawCube(feetPos, rotation, rootPos , feetScale);
 		feetPos.x -= rootScale.x * 0.5;
-		Renderer::drawCube(feetPos, { rotation, rootPos }, feetScale);
+		Renderer::drawCube(feetPos, rotation, rootPos, feetScale);
 	}
 
 	// Chest
@@ -86,13 +89,13 @@ void Olaf::onUpdate(float dt)
 	auto chestScale = rootScale * 0.7f;
 	chestScale.y *= 0.6;
 	chestPos.y += rootScale.y / 2 + chestScale.y / 2;
-	Renderer::drawCube(chestPos, { rotation, rootPos }, chestScale);
+	Renderer::drawCube(chestPos, rotation, rootPos, chestScale);
 
 	// Head
 	glm::vec3 headPos = chestPos;
 	auto headScale = chestScale * 0.8f;
 	headPos.y += chestScale.y / 2 + headScale.y / 2;
-	Renderer::drawCube(headPos, { rotation, rootPos }, headScale);
+	Renderer::drawCube(headPos,  rotation, rootPos , headScale);
 
 	// Nose
 	{
@@ -100,7 +103,7 @@ void Olaf::onUpdate(float dt)
 		nosePos.z += headScale.z / 2;
 		auto noseScale = glm::vec3{0.1, 0.1, 0.5} * scale;
 
-		Renderer::drawCube(nosePos, { rotation, rootPos },
+		Renderer::drawCube(nosePos, rotation, rootPos,
 				noseScale,
 				glm::vec4{ 235.0f / 255.0f, 119.0f / 255.0f, 52.0f / 255.0f, 1.0f });
 	}
@@ -114,7 +117,7 @@ void Olaf::onUpdate(float dt)
 
 		auto eyesScale = glm::vec3{ 0.2, 0.2, 0.2 } *scale;
 
-		Renderer::drawCube(eyesPos, { rotation, rootPos },
+		Renderer::drawCube(eyesPos, rotation, rootPos,
 			eyesScale, { 0, 0, 0, 1 });
 
 
@@ -122,7 +125,7 @@ void Olaf::onUpdate(float dt)
 		eyesPos.z += headScale.z / 2;
 		eyesPos.x -= headScale.x * 0.25;
 		eyesPos.y += headScale.y * 0.25;
-		Renderer::drawCube(eyesPos, { rotation, rootPos },
+		Renderer::drawCube(eyesPos, rotation, rootPos,
 			eyesScale, { 0, 0, 0, 1 });
 	}
 
@@ -132,10 +135,10 @@ void Olaf::onUpdate(float dt)
 		armsPos.x += chestScale.x;
 		glm::vec3 armsScale = glm::vec3{ 3, 0.5, .6 } *scale;
 
-		Renderer::drawCube(armsPos, { rotation, rootPos }, armsScale);
+		Renderer::drawCube(armsPos, rotation, rootPos, armsScale);
 
 		armsPos.x -= chestScale.x * 2;
-		Renderer::drawCube(armsPos, { rotation, rootPos }, -armsScale);
+		Renderer::drawCube(armsPos, rotation, rootPos, -armsScale);
 	}
 }
 
