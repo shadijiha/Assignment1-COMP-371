@@ -153,7 +153,8 @@ void SceneManager::onCreate()
 	});
 
 	addKeyEvent(GLFW_KEY_B, [this](SceneManager& scene, WindowUserData& data, KeyAction action) {
-		Renderer::textures = false;
+		if (action == KeyAction::RELEASE)
+			Renderer::textures = !Renderer::textures;
 	});
 
 	

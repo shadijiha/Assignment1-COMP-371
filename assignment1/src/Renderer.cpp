@@ -80,8 +80,8 @@ void Renderer::drawGrid()
 	// Draw x y yellow grid
 	constexpr float gridDim = 1;
 	const int countPerAxis = GridSize;
-	for (int i = -countPerAxis/2; i < countPerAxis/2; i++) {
-		for(int j = -countPerAxis / 2; j < countPerAxis / 2; j++) {
+	for (int i = -countPerAxis/2; i <= countPerAxis/2; i++) {
+		for(int j = -countPerAxis / 2; j <= countPerAxis / 2; j++) {
 			int mode = textures ? GL_TRIANGLES : GL_LINES;
 			glm::vec4 color = textures ? glm::vec4{1, 1, 1, 1} : glm::vec4{1, 1, 0, 1};
 			Renderer::drawCube({ i, 0, j }, { 0, 0, 0 }, { gridDim, 0.01, gridDim }, color, *Renderer::shader, mode, *snow);
