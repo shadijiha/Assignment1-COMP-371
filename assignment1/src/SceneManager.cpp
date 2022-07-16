@@ -219,7 +219,7 @@ void SceneManager::onUI() {
 			{"Points", []() { Renderer::setDefaultRenderering(GL_POINTS); }}
 		}, currentSelection);
 
-		static std::string texturesCurrentSelection = "On";
+		static std::string texturesCurrentSelection =  "On";
 		UI::drawDropDown("Textures", {
 			{"On", []() { Renderer::textures = true; }},
 			{"Off", []() { Renderer::textures = false; }},
@@ -257,7 +257,7 @@ void SceneManager::onDestroyed()
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
 
-	delete (GLFWwindow*)glfwGetWindowUserPointer(window);
+	delete (WindowUserData*)glfwGetWindowUserPointer(window);
 	glfwDestroyWindow(window);
 	glfwTerminate();
 }

@@ -70,7 +70,7 @@ bool UI::drawVec1Control(const std::string& label, T& value, T resetValue, float
 	bool result = false;
 
 	if (typeid(T) == typeid(float))
-		result = ImGui::DragFloat("##V", (float*)& value, 0.1f, 0, 0, "%.2f");
+		result = ImGui::DragFloat("##V", (float*)& value, 0.01f, 0, 0, "%.2f");
 	else if (typeid(T) == typeid(int))
 		result = ImGui::DragInt("##V", (int*)&value);
 
