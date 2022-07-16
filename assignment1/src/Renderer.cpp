@@ -17,7 +17,7 @@ void Renderer::setDefaultShader(std::shared_ptr<Shader> shader)
 	Renderer::shader = shader;
 }
 
-void Renderer::setDefaultRenderering(int mode)
+void Renderer::setDefaultRenderering(RenderingMode mode)
 {
 	Renderer::renderingMode = mode;
 }
@@ -26,33 +26,33 @@ void Renderer::setLight(std::shared_ptr<Light> light) {
 	Renderer::light = light;
 }
 
-void Renderer::drawCube(const glm::vec3& pos, const glm::vec3& rot, const glm::vec3& scale, const glm::vec4& color, Shader& shader, int mode, Texture& texture)
-{
-	glm::mat4 transform = glm::mat4(1.0) * glm::translate(glm::mat4(1.0), pos) *
-		glm::rotate(glm::mat4(1.0f), glm::radians(rot.x), { 1, 0, 0 }) *
-		glm::rotate(glm::mat4(1.0f), glm::radians(rot.y), { 0, 1, 0 }) *
-		glm::rotate(glm::mat4(1.0f), glm::radians(rot.z), { 0, 0, 1 })	*
-		glm::scale(glm::mat4(1.0), scale);
+void Renderer::drawCube(const RenderingOptions& options) {
 
-	drawCube(transform, color, shader, mode, texture);
-}
-
-void Renderer::drawCube(const glm::vec3& pos, const RotationInfo& rotationData, const glm::vec3& scale,
-	const glm::vec4& color, Shader& shader, int mode) {
-
-	auto rotation = rotationData.rotation;
-	glm::mat4 transform = glm::translate(glm::mat4(1.0f), rotationData.origin)
+	auto rotation = options.rotation;
+	glm::mat4 transform = glm::translate(glm::mat4(1.0f), options.rotationOrigin)
 		* glm::rotate(glm::mat4(1.0), glm::radians(rotation.x), { 1, 0, 0 })
 		* glm::rotate(glm::mat4(1.0), glm::radians(rotation.y), { 0, 1, 0 })
 		* glm::rotate(glm::mat4(1.0), glm::radians(rotation.z), { 0, 0, 1 })
-		* glm::translate(glm::mat4(1.0f), -rotationData.origin)
-		* glm::translate(glm::mat4(1.0), pos)
-		* glm::scale(scale);
+		* glm::translate(glm::mat4(1.0f), -options.rotationOrigin)
+		* glm::translate(glm::mat4(1.0), options.position)
+		* glm::scale(options.scale);
 
-	drawCube(transform, color, shader, mode);
+	drawCube(transform, options.color, *shader, options.mode, *options.texture);
 }
 
-void Renderer::drawCube(const glm::mat4& transform, const glm::vec4& color, Shader& shader, int mode, Texture& texture) {
+void Renderer::drawCube(const glm::vec3& pos, const glm::vec3& rot, const glm::vec3& rotOrigine,
+		const glm::vec3& scale, const glm::vec4& color)
+{
+	RenderingOptions options;
+	options.position = pos;
+	options.rotation = rot;
+	options.rotationOrigin = rotOrigine;
+	options.color = color;
+	options.scale = scale;
+	drawCube(options);
+}
+
+void Renderer::drawCube(const glm::mat4& transform, const glm::vec4& color, Shader& shader, RenderingMode mode, Texture& texture) {
 	shader.bind();
 	shader.setFloat4("u_Color", color);
 	shader.setMat4("u_ViewProjection", camera->getViewProjection());
@@ -69,8 +69,28 @@ void Renderer::drawCube(const glm::mat4& transform, const glm::vec4& color, Shad
 	else
 		Renderer::whiteTexture->bind();
 
+
+	int m = GL_TRIANGLES;
+	mode = mode == RenderingMode::Default ? Renderer::renderingMode : mode;
+	switch (mode)
+	{
+		[[Likely]]
+		case RenderingMode::Triangles:
+			m = GL_TRIANGLES;
+			break;
+		case RenderingMode::LineLoop:
+			m = GL_LINE_LOOP;
+			break;
+		case RenderingMode::Lines:
+			m = GL_LINES;
+			break;
+		case RenderingMode::Points:
+			m = GL_POINTS;
+			break;	
+	}
+
 	info.cube_vao->bind();
-	glDrawArrays(mode, 0, info.cube_vao->getCount());
+	glDrawArrays(m, 0, info.cube_vao->getCount());
 }
 
 void Renderer::drawGrid()
@@ -82,9 +102,17 @@ void Renderer::drawGrid()
 	const int countPerAxis = GridSize;
 	for (int i = -countPerAxis/2; i <= countPerAxis/2; i++) {
 		for(int j = -countPerAxis / 2; j <= countPerAxis / 2; j++) {
-			int mode = textures ? GL_TRIANGLES : GL_LINES;
-			glm::vec4 color = textures ? glm::vec4{1, 1, 1, 1} : glm::vec4{1, 1, 0, 1};
-			Renderer::drawCube({ i, 0, j }, { 0, 0, 0 }, { gridDim, 0.01, gridDim }, color, *Renderer::shader, mode, *snow);
+			RenderingMode mode = textures ? RenderingMode::Triangles : RenderingMode::Lines;
+			glm::vec4 color = textures ? glm::vec4{ 1, 1, 1, 1 } : glm::vec4{ 1, 1, 0, 1 };
+
+			RenderingOptions options;
+			options.color = color;
+			options.mode = mode;
+			options.position = { i, 0, j };
+			options.scale = { gridDim, 0.01, gridDim };
+			options.texture = snow;
+			
+			Renderer::drawCube(options);
 		}
 			
 	}
@@ -92,9 +120,9 @@ void Renderer::drawGrid()
 
 	// Draw axis lines
 	constexpr float lineLength = 5 * gridDim;
-	Renderer::drawCube({ lineLength / 2, 0, 0 }, { 0, 0, 0 }, { lineLength, 0.02, 0.02 }, { 1, 0, 0, 1 });
-	Renderer::drawCube({ 0, lineLength / 2, 0 }, { 0, 0, 0 }, { 0.02, lineLength, 0.02 }, { 0, 1, 0, 1 });
-	Renderer::drawCube({ 0, 0, lineLength / 2}, { 0, 0, 0 }, { 0.02, 0.02, lineLength }, { 0, 0, 1, 1 });
+	Renderer::drawCube({ lineLength / 2, 0, 0 }, { 0, 0, 0 }, {0, 0, 0}, { lineLength, 0.02, 0.02 }, { 1, 0, 0, 1 });
+	Renderer::drawCube({ 0, lineLength / 2, 0 }, { 0, 0, 0 }, { 0, 0, 0 }, { 0.02, lineLength, 0.02 }, { 0, 1, 0, 1 });
+	Renderer::drawCube({ 0, 0, lineLength / 2}, { 0, 0, 0 }, { 0, 0, 0 } , { 0.02, 0.02, lineLength }, { 0, 0, 1, 1 });
 
 }
 
