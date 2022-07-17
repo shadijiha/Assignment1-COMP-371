@@ -26,11 +26,11 @@ void Sphere::onDraw(float dt) {
 
 	bool isTriangles = Renderer::getRenderingMode() == RenderingMode::Triangles;
 
-	glm::mat4 rot = glm::translate(glm::mat4(1.0), position)
+	/*glm::mat4 rot = glm::translate(glm::mat4(1.0), position)
 				* glm::rotate(glm::mat4(1.0), glm::radians(90.0f), { 1, 0, 0 })
-				* glm::translate(glm::mat4(1.0), -position);
+				* glm::translate(glm::mat4(1.0), -position);*/
 
-	glm::mat4 transform = rot * glm::translate(glm::mat4(1.0f), *rotationOriginPtr)
+	glm::mat4 transform = glm::translate(glm::mat4(1.0f), *rotationOriginPtr)
 		* glm::rotate(glm::mat4(1.0), glm::radians(rotation.x), { 1, 0, 0 })
 		* glm::rotate(glm::mat4(1.0), glm::radians(rotation.y), { 0, 1, 0 })
 		* glm::rotate(glm::mat4(1.0), glm::radians(rotation.z), { 0, 0, 1 })
