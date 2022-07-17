@@ -54,48 +54,38 @@ void Renderer::drawCube(const glm::vec3& pos, const glm::vec3& rot, const glm::v
 
 void Renderer::drawCube(const glm::mat4& transform, const glm::vec4& color, Shader& shader, RenderingMode mode, Texture& texture) {
 	shader.bind();
-	shader.setFloat4("u_Color", color);
-	shader.setMat4("u_ViewProjection", camera->getViewProjection());
+	
+	shader.setFloat3("u_Camera.position", camera->getPosition());
+	shader.setMat4("u_Camera.viewProjection", camera->getViewProjection());
+
 	shader.setMat4("u_Transform", transform);
 
-	shader.setFloat3("u_LightPosition", light->position);
-	shader.setFloat4("u_LightColor", light->color);
-	shader.setFloat("u_AmbientStrength", light->ambientStrength);
+	shader.setFloat3("u_Light.position", light->position);
+	shader.setFloat4("u_Light.color", light->color);
+	shader.setFloat("u_Light.ambientStrength", light->ambientStrength);
+
 	shader.setInt("ourTexture", 0);
 
-	/* Push each element in buffer_vertices to the vertex shader */
+	shader.setFloat4("u_Material.color", color);
+	shader.setFloat("u_Material.shininess", 0);
+
 	if (textures)
 		texture.bind();
 	else
 		Renderer::whiteTexture->bind();
 
 
-	int m = GL_TRIANGLES;
-	mode = mode == RenderingMode::Default ? Renderer::renderingMode : mode;
-	switch (mode)
-	{
-		[[Likely]]
-		case RenderingMode::Triangles:
-			m = GL_TRIANGLES;
-			break;
-		case RenderingMode::LineLoop:
-			m = GL_LINE_LOOP;
-			break;
-		case RenderingMode::Lines:
-			m = GL_LINES;
-			break;
-		case RenderingMode::Points:
-			m = GL_POINTS;
-			break;	
-	}
+
 
 	info.cube_vao->bind();
-	glDrawArrays(m, 0, info.cube_vao->getCount());
+	glDrawArrays(getGLRenderingMode(mode), 0, info.cube_vao->getCount());
 }
 
 void Renderer::drawGrid()
 {
 	static std::shared_ptr<Texture> snow = std::make_shared<Texture>("shaders/snow.png");
+
+	Renderer::info.ground_Texture = snow;
 
 	// Draw x y yellow grid
 	constexpr float gridDim = 1;
@@ -123,7 +113,6 @@ void Renderer::drawGrid()
 	Renderer::drawCube({ lineLength / 2, 0, 0 }, { 0, 0, 0 }, {0, 0, 0}, { lineLength, 0.02, 0.02 }, { 1, 0, 0, 1 });
 	Renderer::drawCube({ 0, lineLength / 2, 0 }, { 0, 0, 0 }, { 0, 0, 0 }, { 0.02, lineLength, 0.02 }, { 0, 1, 0, 1 });
 	Renderer::drawCube({ 0, 0, lineLength / 2}, { 0, 0, 0 }, { 0, 0, 0 } , { 0.02, 0.02, lineLength }, { 0, 0, 1, 1 });
-
 }
 
 void Renderer::drawSkyBox() {
@@ -136,11 +125,31 @@ void Renderer::drawSkyBox() {
 	skyboxShader->setInt("skybox", 0);
 
 	glBindVertexArray(info.skybox_VAO_RendererID);
-	glActiveTexture(GL_TEXTURE0);
+	glActiveTexture(GL_TEXTURE0 + info.skybox_Text_slot);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, info.skybox_Text_RendererID);
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 	glBindVertexArray(0);
 	glDepthFunc(GL_LESS); // set depth function back to default
+}
+
+int Renderer::getGLRenderingMode(RenderingMode mode) {
+	mode = mode == RenderingMode::Default ? Renderer::renderingMode : mode;
+
+	switch (mode)
+	{
+		[[Likely]]
+		case RenderingMode::Triangles:
+			return GL_TRIANGLES;
+		case RenderingMode::LineLoop:
+			return GL_LINE_LOOP;
+		case RenderingMode::Lines:
+			return GL_LINES;
+		case RenderingMode::Points:
+			return GL_POINTS;
+		case RenderingMode::TriangleStrip:
+			return GL_TRIANGLE_STRIP;
+	}
+	return GL_TRIANGLES;
 }
 
 /**
@@ -217,6 +226,31 @@ void Renderer::init()
 	info.cube_vao->addVertexBuffer(buffer);	
 
 	Renderer::initCubeMap();
+
+
+	/**
+	 * Initialize shadow texture
+	 */
+	unsigned int depthMapFBO;
+	glGenFramebuffers(1, &depthMapFBO);
+	info.shadow_frameBuffer = depthMapFBO;
+
+	unsigned int depthMap;
+	glGenTextures(1, &depthMap);
+	glBindTexture(GL_TEXTURE_2D, depthMap);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT,
+		info.shadow_width, info.shadow_height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
+	glDrawBuffer(GL_NONE);
+	glReadBuffer(GL_NONE);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	info.shadow_depth_map = depthMap;
 }
 
 void Renderer::initCubeMap() {

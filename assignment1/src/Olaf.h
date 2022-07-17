@@ -3,6 +3,8 @@
 #include "util/Texture.h"
 #include <memory>
 
+#include "objects3d/Sphere.h"
+
 class SceneManager;
 
 class Olaf {
@@ -13,7 +15,6 @@ public:
 	void onUpdate(float dt);
 	void onDestroyed();
 
-
 	void randomPosition();
 
 private:
@@ -23,6 +24,11 @@ private:
 	glm::vec3 rotation = glm::vec3(0);
 
 	std::shared_ptr<Texture> carrot;
+	//std::shared_ptr<Sphere> sphere;
+
+	std::shared_ptr<Sphere> head;
+	std::shared_ptr<Sphere> chest;
+	std::shared_ptr<Sphere> body;
 
 	friend class SceneManager;
 };

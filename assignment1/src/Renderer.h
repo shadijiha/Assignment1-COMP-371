@@ -12,10 +12,16 @@ struct RendererInfo {
 
 	uint32_t skybox_Text_RendererID;
 	uint32_t skybox_VAO_RendererID;
+	uint32_t skybox_Text_slot = 5;
+
+	uint32_t shadow_frameBuffer;
+	uint32_t shadow_depth_map;
+	uint32_t shadow_width = 1024, shadow_height = 1024;
+	std::shared_ptr<Texture> ground_Texture = nullptr;
 };
 
 enum class RenderingMode {
-	Triangles, LineLoop, Lines, Points, Default
+	Triangles, LineLoop, Lines, Points, Default, TriangleStrip
 };
 
 
@@ -74,6 +80,15 @@ public:
 	 */
 	inline static RenderingMode getRenderingMode() { return renderingMode; }
 
+	/**
+	 * Convert rendering mode enum to OpenGL enum
+	 */
+	static int getGLRenderingMode(RenderingMode mode = Renderer::renderingMode);
+
+	static int getCubeMapTextureID() { return Renderer::info.skybox_Text_RendererID; }
+
+	static const RendererInfo& getInfo() { return info; }
+
 private:
 	/**
 	 * \brief Initialize everything used for the skybox
@@ -85,7 +100,7 @@ private:
 	inline static std::shared_ptr<Light> light = nullptr;
 	inline static std::shared_ptr<Shader> shader = nullptr;		// Default shader
 	inline static std::shared_ptr<Shader> skyboxShader = nullptr;		// Skybox shader
-	inline static std::shared_ptr<Texture> whiteTexture = nullptr;
+	
 	inline static RenderingMode renderingMode = RenderingMode::Triangles;
 	inline static RendererInfo info;
 
@@ -93,6 +108,7 @@ private:
 	inline static glm::vec3 ONE = glm::vec3(1);
 	inline static glm::vec4 WHITE = glm::vec4(1);
 public:
+	inline static std::shared_ptr<Texture> whiteTexture = nullptr;
 	inline static bool textures = true;
 	inline static int GridSize = 100;
 

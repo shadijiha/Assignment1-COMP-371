@@ -12,6 +12,30 @@ void Olaf::onCreate(SceneManager& manager)
 {
 	carrot = std::make_shared<Texture>("shaders/carrot.jpg");
 
+	body = std::make_shared<Sphere>();
+	body->setShader(manager.shader);
+	body->setCamera(manager.camera);
+	body->setLight(manager.light);
+
+	chest = std::make_shared<Sphere>();
+	chest->setShader(manager.shader);
+	chest->setCamera(manager.camera);
+	chest->setLight(manager.light);
+
+	head = std::make_shared<Sphere>();
+	head->setShader(manager.shader);
+	head->setCamera(manager.camera);
+	head->setLight(manager.light);
+
+	// DEBUG shader
+	/*std::shared_ptr<Shader> debugShader = std::make_shared<Shader>("shaders/debug.glsl");
+	std::shared_ptr<Texture> debugTexture = std::make_shared<Texture>("shaders/world.png");
+	sphere = std::make_shared<Sphere>(glm::vec3{0, 1.5, 0});
+	sphere->setCamera(manager.getCamera())
+		.setShader(debugShader)
+		.setLight(manager.getLight())
+		.setTexture(debugTexture);*/
+
 	// Movement and rotation
 	constexpr float speed = 0.1;
 	manager.addKeyEvent(GLFW_KEY_D, [this, speed](SceneManager& scene, WindowUserData& data, KeyAction action) {
@@ -72,7 +96,11 @@ void Olaf::onUpdate(float dt)
 	rootPos.y += rootPos.y + rootScale.y / 2 + feetScale.y;
 
 	// Root
-	Renderer::drawCube(rootPos, rotation, rootPos, rootScale);
+	//Renderer::drawCube(rootPos, rotation, rootPos, rootScale);
+	body->position = rootPos;
+	body->rotation = rotation;
+	body->scale = { rootScale.x, rootScale.y , rootScale.x};
+	body->onDraw(dt);
 	
 	// Feet
 	{
@@ -86,33 +114,49 @@ void Olaf::onUpdate(float dt)
 
 	// Chest
 	glm::vec3 chestPos = rootPos;
-	auto chestScale = rootScale * 0.7f;
-	chestScale.y *= 0.6;
+	auto chestScale = rootScale * 0.6f;
+	//chestScale.y *= 0.6;
 	chestPos.y += rootScale.y / 2 + chestScale.y / 2;
-	Renderer::drawCube(chestPos, rotation, rootPos, chestScale);
+	//Renderer::drawCube(chestPos, rotation, rootPos, chestScale);
+	chest->position = chestPos;
+	chest->rotation = rotation;
+	chest->setRotationOrigin(rootPos);
+	chest->scale = { chestScale.x, chestScale.y, chestScale.x};
+	chest->onDraw(dt);
 
 	// Head
 	glm::vec3 headPos = chestPos;
 	auto headScale = chestScale * 0.8f;
 	headPos.y += chestScale.y / 2 + headScale.y / 2;
-	Renderer::drawCube(headPos,  rotation, rootPos , headScale);
+	//Renderer::drawCube(headPos,  rotation, rootPos , headScale);
+	head->position = headPos;
+	head->rotation = rotation;
+	head->setRotationOrigin(rootPos);
+	head->scale = { headScale.x, headScale.y, headScale.x };
+	head->onDraw(dt);
 
 	// Nose
 	{
 		glm::vec3 nosePos = headPos;
-		nosePos.z += headScale.z / 2;
-		auto noseScale = glm::vec3{0.1, 0.1, 0.5} * scale;
+		nosePos.z += headScale.z + 0.6;
+		auto noseScale = glm::vec3{0.2, 0.2, 0.5} * scale;
 
-		Renderer::drawCube(nosePos, rotation, rootPos,
-				noseScale,
-				glm::vec4{ 235.0f / 255.0f, 119.0f / 255.0f, 52.0f / 255.0f, 1.0f });
+		glm::vec4 color = Renderer::textures ? glm::vec4{1, 1, 1, 1} : glm::vec4{ 235.0f / 255.0f, 119.0f / 255.0f, 52.0f / 255.0f, 1.0f };
+		RenderingOptions options;
+		options.position = nosePos;
+		options.rotation = rotation;
+		options.rotationOrigin = rootPos;
+		options.scale = noseScale;
+		options.color = color;
+		options.texture = carrot;
+		Renderer::drawCube(options);
 	}
 
 	// Eyes
 	{
 		glm::vec3 eyesPos = headPos;
-		eyesPos.z += headScale.z / 2;
-		eyesPos.x += headScale.x * 0.25;
+		eyesPos.z += headScale.z + 0.3f;
+		eyesPos.x += headScale.x * 0.15;
 		eyesPos.y += headScale.y * 0.25;
 
 		auto eyesScale = glm::vec3{ 0.2, 0.2, 0.2 } *scale;
@@ -122,7 +166,7 @@ void Olaf::onUpdate(float dt)
 
 
 		eyesPos = headPos;
-		eyesPos.z += headScale.z / 2;
+		eyesPos.z += headScale.z + 0.3f;
 		eyesPos.x -= headScale.x * 0.25;
 		eyesPos.y += headScale.y * 0.25;
 		Renderer::drawCube(eyesPos, rotation, rootPos,

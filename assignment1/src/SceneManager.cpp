@@ -56,26 +56,59 @@ void SceneManager::run()
 	glEnable(GL_DEBUG_OUTPUT);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_PROGRAM_POINT_SIZE);
-	glDebugMessageCallback(handleErrors, 0);
+	//glDebugMessageCallback(handleErrors, 0);
 
 	float lastFrameTime = glfwGetTime();
 	while (!glfwWindowShouldClose(window)) {
 		const float dt = glfwGetTime() - lastFrameTime;
 		lastFrameTime += dt;
 
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		// Render scene to frameBuffer
+		const auto& info = Renderer::getInfo();
 
-		// Draw x, y grid and skybox
-		
-		Renderer::drawGrid();
-		onUpdate(dt);
-		
-		// skybox cube
-		Renderer::drawSkyBox();
+		{
+			shadows_shader->bind();
+			shadows_shader->setMat4("lightSpaceMatrix", light->getSpaceMatrix());
+			shadows_shader->setInt("diffuseTexture", 0);
+			shadows_shader->setInt("shadowMap", 1);
 
-		// Draw UI on top of everything
-		onUI();
+			Renderer::setDefaultShader(shadows_shader);
 
+			glViewport(0, 0, info.shadow_width, info.shadow_height);
+			glBindFramebuffer(GL_FRAMEBUFFER, info.shadow_frameBuffer);
+			glClear(GL_DEPTH_BUFFER_BIT);
+			Renderer::drawGrid();
+			onUpdate(dt);
+
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		}
+
+		{
+			Renderer::setDefaultShader(shader);
+			shader->bind();
+			shader->setMat4("lightSpaceMatrix", light->getSpaceMatrix());
+			shader->setInt("diffuseTexture", 0);
+			shader->setInt("shadowMap", 1);
+			shader->setInt("u_allowShadows", (int)allowShadows);
+
+			glViewport(0, 0, width, height);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+			//info.ground_Texture->bind(3);
+
+			glActiveTexture(GL_TEXTURE1);
+			glBindTexture(GL_TEXTURE_2D, info.shadow_depth_map);
+
+			// Draw x, y grid and skybox		
+			Renderer::drawGrid();
+			onUpdate(dt);
+
+			// skybox cube
+			Renderer::drawSkyBox();
+
+			// Draw UI on top of everything
+			onUI();
+		}
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
@@ -88,6 +121,7 @@ void SceneManager::onCreate()
 	camera = std::make_shared<Camera>(*this, width, height);
 	shader = std::make_shared<Shader>("shaders/shader.glsl");
 	light = std::make_shared<Light>();
+	shadows_shader = std::make_shared<Shader>("shaders/shadow_shader.glsl");
 
 	Renderer::init();
 	Renderer::setCamera(camera);
@@ -103,37 +137,37 @@ void SceneManager::onCreate()
 
 	addKeyEvent(GLFW_KEY_UP, [=](SceneManager& scene, WindowUserData& data, KeyAction action) {
 		auto& camera = scene.getCamera();
-		auto camRot = camera.getRotation();
+		auto camRot = camera->getRotation();
 		camRot.x += camRotSpeed;
-		camera.setRotation(camRot);
+		camera->setRotation(camRot);
 	});
 
 	addKeyEvent(GLFW_KEY_DOWN, [=](SceneManager& scene, WindowUserData& data, KeyAction action) {
 		auto& camera = scene.getCamera();
-		auto camRot = camera.getRotation();
+		auto camRot = camera->getRotation();
 		camRot.x -= camRotSpeed;
-		camera.setRotation(camRot);;
+		camera->setRotation(camRot);;
 		});
 
 	// Camera rotation
 	addKeyEvent(GLFW_KEY_RIGHT, [=](SceneManager& scene, WindowUserData& data, KeyAction action) {
 		auto& camera = scene.getCamera();
-		auto camRot = camera.getRotation();
+		auto camRot = camera->getRotation();
 		camRot.y += camRotSpeed;
-		camera.setRotation(camRot);
+		camera->setRotation(camRot);
 		});
 
 	addKeyEvent(GLFW_KEY_LEFT, [=](SceneManager& scene, WindowUserData& data, KeyAction action) {
 		auto& camera = scene.getCamera();
-		auto camRot = camera.getRotation();
+		auto camRot = camera->getRotation();
 		camRot.y -= camRotSpeed;
-		camera.setRotation(camRot);
+		camera->setRotation(camRot);
 		});
 
 	addKeyEvent(GLFW_KEY_HOME, [=](SceneManager& scene, WindowUserData& data, KeyAction action) {
 		auto& camera = scene.getCamera();
-		camera.setRotation({ 30.0f, 30.0f, 0 });
-		camera.setPosition({-3, 4, 10});
+		camera->setRotation({ 30.0f, 30.0f, 0 });
+		camera->setPosition({-3, 4, 10});
 	});
 
 	addKeyEvent(GLFW_KEY_P, [](SceneManager& scene, WindowUserData& data, KeyAction action) {
@@ -152,9 +186,14 @@ void SceneManager::onCreate()
 		std::cout << 1 / lastDt << std::endl;
 	});
 
-	addKeyEvent(GLFW_KEY_B, [this](SceneManager& scene, WindowUserData& data, KeyAction action) {
+	addKeyEvent(GLFW_KEY_X, [this](SceneManager& scene, WindowUserData& data, KeyAction action) {
 		if (action == KeyAction::RELEASE)
 			Renderer::textures = !Renderer::textures;
+	});
+
+	addKeyEvent(GLFW_KEY_B, [this](SceneManager& scene, WindowUserData& data, KeyAction action) {
+		if (action == KeyAction::RELEASE)
+			allowShadows = !allowShadows;
 	});
 
 	
@@ -208,7 +247,7 @@ void SceneManager::onUI() {
 	});
 
 	// Grid size
-	UI::drawTreeNode<Renderer>("Grid settings", [this]() {
+	UI::drawTreeNode<Renderer>("Environment settings", [this]() {
 		UI::drawVec1Control<int>("Grid count ", Renderer::GridSize, 0, 100);
 
 		// Select menu to change Rendering mode
@@ -224,6 +263,12 @@ void SceneManager::onUI() {
 			{"On", []() { Renderer::textures = true; }},
 			{"Off", []() { Renderer::textures = false; }},
 			}, texturesCurrentSelection);
+
+		static std::string shadowCurrentSelection = "On";
+		UI::drawDropDown("Shadows", {
+			{"On", [this]() {  allowShadows = true; }},
+			{"Off", [this]() { allowShadows = false; }},
+			}, shadowCurrentSelection);
 	});
 
 	// Light settings
@@ -233,8 +278,20 @@ void SceneManager::onUI() {
 		UI::drawVec1Control("ambiant strength", light->ambientStrength);
 	});
 
+	// Sphere settings
+	/*UI::drawTreeNode<Sphere>("Sphere settings", [this]() {
+		UI::drawVec3Control("position", olaf.sphere->position);
+		UI::drawVec3Control("rotation", olaf.sphere->rotation);
+		UI::drawVec3Control("scale", olaf.sphere->scale, 1.0f);
+		UI::drawColorControl("colour", olaf.sphere->color);
+	});*/
+
 	ImGui::End();
 
+
+	ImGui::Begin("hehexd");
+	ImGui::Image((ImTextureID)Renderer::getInfo().shadow_depth_map, { 1024, 1024 });
+	ImGui::End();
 
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -294,7 +351,7 @@ void SceneManager::listenToEvents(GLFWwindow* window) {
 		data.height = height;
 
 		glViewport(0, 0, width, height);
-		data.sceneManager->getCamera().setWindowSize(width, height);
+		data.sceneManager->getCamera()->setWindowSize(width, height);
 	});
 
 	glfwSetKeyCallback(window, [](GLFWwindow* window, int key, int scancode, int action, int mods) {

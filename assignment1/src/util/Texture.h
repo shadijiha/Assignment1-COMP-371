@@ -1,10 +1,18 @@
 ﻿#pragma once
 #include <string>
-	
+
+	enum class TextureType {
+		Texture2D, CubeMap
+	};
+
+	enum class TextureWrap {
+		Repeat, ClampToEdge
+	};
+
 	class Texture {
 	public:
-		Texture(uint32_t width, uint32_t height);
-		Texture(const std::string& path);
+		Texture(uint32_t width, uint32_t height, TextureType type = TextureType::Texture2D, TextureWrap wrap = TextureWrap::Repeat);
+		Texture(const std::string& path, TextureType type = TextureType::Texture2D, TextureWrap wrap = TextureWrap::Repeat);
 		~Texture();
 
 		void setData(void* data, uint32_t size);

@@ -5,7 +5,7 @@
 
 
 void UI::drawDropDown(const std::string& label, std::initializer_list<std::pair<std::string, std::function<void()>>> options, std::string& currentType) {
-	if (ImGui::BeginCombo((std::string("Type") + label).c_str(), currentType.c_str())) {
+	if (ImGui::BeginCombo(label.c_str(), currentType.c_str())) {
 
 		for (const auto& option : options) {
 			bool isSelected = currentType == option.first;

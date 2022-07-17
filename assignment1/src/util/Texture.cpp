@@ -3,23 +3,47 @@
 #include "stb_image/stb_image.h"
 #include "GL/glew.h"
 #include <GLFW/glfw3.h>
+
+	static int openGLType(TextureType type) {
+		switch (type) {
+			case TextureType::Texture2D:
+				return GL_TEXTURE_2D;
+			case TextureType::CubeMap:
+				return GL_TEXTURE_CUBE_MAP;
+			default:
+				assert(false, "Invalid type");
+				return -1;
+		}
+	}
+
+	static int openGLWrap(TextureWrap type) {
+		switch (type) {
+		case TextureWrap::Repeat:
+			return GL_REPEAT;
+		case TextureWrap::ClampToEdge:
+			return GL_CLAMP_TO_EDGE;
+		default:
+			assert(false, "Invalid wrap type");
+			return -1;
+		}
+	}
 	
-	Texture::Texture(uint32_t width, uint32_t height)
+	Texture::Texture(uint32_t width, uint32_t height, TextureType type, TextureWrap wrap)
 		: m_Width(width), m_Height(height) {
 		m_InternalFormat = GL_RGBA8;
 		m_DataFormat = GL_RGBA;
 
-		glCreateTextures(GL_TEXTURE_2D, 1, &m_RendererID);
+		glCreateTextures(openGLType(type), 1, &m_RendererID);
 		glTextureStorage2D(m_RendererID, 1, m_InternalFormat, m_Width, m_Height);
 
 		glTextureParameteri(m_RendererID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTextureParameteri(m_RendererID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-		glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_S, openGLWrap(wrap));
+		glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_T, openGLWrap(wrap));
 	}
 
-	Texture::Texture(const std::string& path)
+	Texture::Texture(const std::string& path, TextureType type, TextureWrap wrap)
 		: m_RendererID(0), m_Width(0), m_Height(0), m_FilePath(path)
 	{
 		int width, height, channels;
@@ -51,14 +75,15 @@
 
 			assert(internalFormat & dataFormat, "Format not supported!");
 
-			glCreateTextures(GL_TEXTURE_2D, 1, &m_RendererID);
+			glCreateTextures(openGLType(type), 1, &m_RendererID);
 			glTextureStorage2D(m_RendererID, 1, internalFormat, m_Width, m_Height);
 
 			glTextureParameteri(m_RendererID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 			glTextureParameteri(m_RendererID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-			glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_S, GL_REPEAT);
-			glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_T, GL_REPEAT);
+			glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_S, openGLWrap(wrap));
+			glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_T, openGLWrap(wrap));
+			glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_R, openGLWrap(wrap));
 
 			glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, dataFormat, GL_UNSIGNED_BYTE, data);
 
