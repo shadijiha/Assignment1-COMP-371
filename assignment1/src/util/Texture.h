@@ -1,7 +1,9 @@
 ﻿#pragma once
+#include <memory>
 #include <string>
+#include <vector>
 
-	enum class TextureType {
+enum class TextureType {
 		Texture2D, CubeMap
 	};
 
@@ -10,10 +12,15 @@
 	};
 
 	class Texture {
+	private:
+		
 	public:
-		Texture(uint32_t width, uint32_t height, TextureType type = TextureType::Texture2D, TextureWrap wrap = TextureWrap::Repeat);
-		Texture(const std::string& path, TextureType type = TextureType::Texture2D, TextureWrap wrap = TextureWrap::Repeat);
+		Texture() {}
+		Texture(uint32_t width, uint32_t height);
+		Texture(const std::string& path);
 		~Texture();
+
+		static std::shared_ptr<Texture> cubeMap(const std::vector<std::string> files);
 
 		void setData(void* data, uint32_t size);
 

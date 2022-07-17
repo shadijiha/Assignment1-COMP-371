@@ -1,5 +1,7 @@
 ﻿#include "Texture.h"
 #include <assert.h>
+#include <iostream>
+
 #include "stb_image/stb_image.h"
 #include "GL/glew.h"
 #include <GLFW/glfw3.h>
@@ -28,22 +30,22 @@
 		}
 	}
 	
-	Texture::Texture(uint32_t width, uint32_t height, TextureType type, TextureWrap wrap)
+	Texture::Texture(uint32_t width, uint32_t height)
 		: m_Width(width), m_Height(height) {
 		m_InternalFormat = GL_RGBA8;
 		m_DataFormat = GL_RGBA;
 
-		glCreateTextures(openGLType(type), 1, &m_RendererID);
+		glCreateTextures(openGLType(TextureType::Texture2D), 1, &m_RendererID);
 		glTextureStorage2D(m_RendererID, 1, m_InternalFormat, m_Width, m_Height);
 
 		glTextureParameteri(m_RendererID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTextureParameteri(m_RendererID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-		glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_S, openGLWrap(wrap));
-		glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_T, openGLWrap(wrap));
+		glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_S, openGLWrap(TextureWrap::Repeat));
+		glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_T, openGLWrap(TextureWrap::Repeat));
 	}
 
-	Texture::Texture(const std::string& path, TextureType type, TextureWrap wrap)
+	Texture::Texture(const std::string& path)
 		: m_RendererID(0), m_Width(0), m_Height(0), m_FilePath(path)
 	{
 		int width, height, channels;
@@ -75,15 +77,15 @@
 
 			assert(internalFormat & dataFormat, "Format not supported!");
 
-			glCreateTextures(openGLType(type), 1, &m_RendererID);
+			glCreateTextures(openGLType(TextureType::Texture2D), 1, &m_RendererID);
 			glTextureStorage2D(m_RendererID, 1, internalFormat, m_Width, m_Height);
 
 			glTextureParameteri(m_RendererID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 			glTextureParameteri(m_RendererID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-			glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_S, openGLWrap(wrap));
-			glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_T, openGLWrap(wrap));
-			glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_R, openGLWrap(wrap));
+			glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_S, openGLWrap(TextureWrap::Repeat));
+			glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_T, openGLWrap(TextureWrap::Repeat));
+			glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_R, openGLWrap(TextureWrap::Repeat));
 
 			glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, dataFormat, GL_UNSIGNED_BYTE, data);
 
@@ -95,11 +97,56 @@
 		glDeleteTextures(1, &m_RendererID);
 	}
 
-	void Texture::setData(void* data, uint32_t size) {
-		uint32_t bpp = m_DataFormat == GL_RGBA ? 4 : 3;
-		assert(size == m_Width * m_Height * bpp, "Data must be entire texture!");
-		glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, m_DataFormat, GL_UNSIGNED_BYTE, data);
+	std::shared_ptr<Texture> Texture::cubeMap(const std::vector<std::string> faces) {
+		unsigned int textureID;
+		glGenTextures(1, &textureID);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+
+		int width, height, nrChannels;
+		for (unsigned int i = 0; i < faces.size(); i++)
+		{
+			unsigned char* data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
+			if (data)
+			{
+				glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+				stbi_image_free(data);
+			} else
+			{
+				std::cout << "Cubemap texture failed to load at path: " << faces[i] << std::endl;
+				stbi_image_free(data);
+			}
+		}
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+		std::shared_ptr<Texture> texture = std::make_shared<Texture>();
+		texture->m_RendererID = textureID;
+		texture->m_Width = width;
+		texture->m_Height = height;
+
+		if (nrChannels == 4)
+		{
+			texture->m_InternalFormat = GL_RGBA8;
+			texture->m_DataFormat = GL_RGBA;
+		} else if (nrChannels == 3)
+		{
+			texture->m_InternalFormat = GL_RGB8;
+			texture->m_DataFormat = GL_RGB;
+		}
+
+		texture->m_IsLoaded = true;
+
+		return texture;
 	}
+
+	void Texture::setData(void* data, uint32_t size) {
+			uint32_t bpp = m_DataFormat == GL_RGBA ? 4 : 3;
+			assert(size == m_Width * m_Height * bpp, "Data must be entire texture!");
+			glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, m_DataFormat, GL_UNSIGNED_BYTE, data);
+		}
 
 	void Texture::bind(uint32_t slot) const {
 		glBindTextureUnit(slot, m_RendererID);

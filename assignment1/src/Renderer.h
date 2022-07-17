@@ -10,8 +10,8 @@ struct Light;
 struct RendererInfo {
 	std::shared_ptr<VertexArray> cube_vao;
 
-	uint32_t skybox_Text_RendererID;
-	uint32_t skybox_VAO_RendererID;
+	std::shared_ptr<Texture> skybox_Texture;
+	std::shared_ptr<VertexArray> skybox_VAO;
 	uint32_t skybox_Text_slot = 5;
 
 	uint32_t shadow_frameBuffer;
@@ -85,7 +85,7 @@ public:
 	 */
 	static int getGLRenderingMode(RenderingMode mode = Renderer::renderingMode);
 
-	static int getCubeMapTextureID() { return Renderer::info.skybox_Text_RendererID; }
+	static std::shared_ptr<Texture> getCubeMapTexture() { return Renderer::info.skybox_Texture; }
 
 	static const RendererInfo& getInfo() { return info; }
 

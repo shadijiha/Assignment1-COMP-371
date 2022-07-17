@@ -38,8 +38,7 @@ void Sphere::onDraw(float dt) {
 		* glm::translate(glm::mat4(1.0), position)
 		* glm::scale(scale);
 
-	glActiveTexture(GL_TEXTURE0 + Renderer::getInfo().skybox_Text_slot);
-	glBindTextureUnit(1, Renderer::getCubeMapTextureID());
+	Renderer::getCubeMapTexture()->bind(Renderer::getInfo().skybox_Text_slot);
 
 	shader->bind();
 	
