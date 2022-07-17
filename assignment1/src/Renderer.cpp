@@ -90,7 +90,7 @@ void Renderer::drawGrid()
 	// Draw x y yellow grid
 	constexpr float gridDim = 1;
 	const int countPerAxis = GridSize;
-	for (int i = -countPerAxis/2; i <= countPerAxis/2; i++) {
+	/*for (int i = -countPerAxis / 2; i <= countPerAxis / 2; i++) {
 		for(int j = -countPerAxis / 2; j <= countPerAxis / 2; j++) {
 			RenderingMode mode = textures ? RenderingMode::Triangles : RenderingMode::Lines;
 			glm::vec4 color = textures ? glm::vec4{ 1, 1, 1, 1 } : glm::vec4{ 1, 1, 0, 1 };
@@ -105,7 +105,15 @@ void Renderer::drawGrid()
 			Renderer::drawCube(options);
 		}
 			
-	}
+	}*/
+
+	RenderingOptions options;
+	options.color = {1, 1, 1, 1};
+	options.mode = RenderingMode::Triangles;
+	options.position = { 0, 0, 0 };
+	options.scale = { gridDim * GridSize, 0.01, gridDim * GridSize };
+	options.texture = snow;
+	Renderer::drawCube(options);
 
 
 	// Draw axis lines

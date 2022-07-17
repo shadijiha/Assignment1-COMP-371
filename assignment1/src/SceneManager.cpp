@@ -87,7 +87,7 @@ void SceneManager::run()
 			Renderer::setDefaultShader(shader);
 			shader->bind();
 			shader->setMat4("lightSpaceMatrix", light->getSpaceMatrix());
-			shader->setInt("diffuseTexture", 0);
+			shader->setInt("diffuseTexture", 7);
 			shader->setInt("shadowMap", 1);
 			shader->setInt("u_allowShadows", (int)allowShadows);
 
@@ -95,7 +95,7 @@ void SceneManager::run()
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 			//info.ground_Texture->bind(3);
-
+			info.ground_Texture->bind(7);
 			glActiveTexture(GL_TEXTURE1);
 			glBindTexture(GL_TEXTURE_2D, info.shadow_depth_map);
 
@@ -286,11 +286,6 @@ void SceneManager::onUI() {
 		UI::drawColorControl("colour", olaf.sphere->color);
 	});*/
 
-	ImGui::End();
-
-
-	ImGui::Begin("hehexd");
-	ImGui::Image((ImTextureID)Renderer::getInfo().shadow_depth_map, { 1024, 1024 });
 	ImGui::End();
 
 	ImGui::Render();

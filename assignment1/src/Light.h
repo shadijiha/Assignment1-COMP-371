@@ -4,8 +4,9 @@
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
 
+
 struct Light {
-	glm::vec3 position = {1.7, 4.5, -2};
+	glm::vec3 position = {1.7, 1.8, -2};
 	glm::vec4 color = { 1, 1, 1, 1 };
 	float ambientStrength = 0.5;
 

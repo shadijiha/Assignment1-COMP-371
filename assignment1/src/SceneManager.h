@@ -62,5 +62,6 @@ private:
 	float lastDt = 0.0f;
 
 	friend class Olaf;
+	friend class Light;
 };
 
