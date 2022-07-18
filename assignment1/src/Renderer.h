@@ -96,9 +96,6 @@ private:
 	static void initCubeMap();
 
 private:
-	inline static std::shared_ptr<Camera> camera = nullptr;
-	inline static std::shared_ptr<Light> light = nullptr;
-	inline static std::shared_ptr<Shader> shader = nullptr;		// Default shader
 	inline static std::shared_ptr<Shader> skyboxShader = nullptr;		// Skybox shader
 	
 	inline static RenderingMode renderingMode = RenderingMode::Triangles;
@@ -109,6 +106,10 @@ private:
 	inline static glm::vec4 WHITE = glm::vec4(1);
 public:
 	inline static std::shared_ptr<Texture> whiteTexture = nullptr;
+	inline static std::shared_ptr<Camera> camera = nullptr;
+	inline static std::shared_ptr<Light> light = nullptr;
+	inline static std::shared_ptr<Shader> shader = nullptr;		// Default shader
+
 	inline static bool textures = true;
 	inline static int GridSize = 100;
 

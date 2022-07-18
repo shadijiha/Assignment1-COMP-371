@@ -232,6 +232,7 @@ void SceneManager::onUI() {
 		UI::drawVec3Control("position", olaf.position);
 		UI::drawVec3Control("rotation", olaf.rotation);
 		UI::drawVec1Control<float>("scale", olaf.scale);
+		UI::drawVec1Control<float>("shininess", olaf.shininess);
 
 		if (ImGui::Button("random position"))
 			olaf.randomPosition();
@@ -278,13 +279,12 @@ void SceneManager::onUI() {
 		UI::drawVec1Control("ambiant strength", light->ambientStrength);
 	});
 
-	// Sphere settings
-	/*UI::drawTreeNode<Sphere>("Sphere settings", [this]() {
-		UI::drawVec3Control("position", olaf.sphere->position);
-		UI::drawVec3Control("rotation", olaf.sphere->rotation);
-		UI::drawVec3Control("scale", olaf.sphere->scale, 1.0f);
-		UI::drawColorControl("colour", olaf.sphere->color);
-	});*/
+	// hat settings
+	UI::drawTreeNode<Sphere>("Hat settings", [this]() {
+		UI::drawVec3Control("position", olaf.hat->position);
+		UI::drawVec3Control("rotation", olaf.hat->rotation);
+		UI::drawVec3Control("scale", olaf.hat->scale, 1.0f);
+	});
 
 	ImGui::End();
 
@@ -344,6 +344,8 @@ void SceneManager::listenToEvents(GLFWwindow* window) {
 		WindowUserData& data = *(WindowUserData*)glfwGetWindowUserPointer(window);
 		data.width = width;
 		data.height = height;
+		data.sceneManager->width = width;
+		data.sceneManager->height = height;
 
 		glViewport(0, 0, width, height);
 		data.sceneManager->getCamera()->setWindowSize(width, height);

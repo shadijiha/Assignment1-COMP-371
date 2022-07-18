@@ -37,6 +37,7 @@ public:
 	glm::vec3 rotation;
 	glm::vec3 scale;
 	glm::vec4 color;
+	float shininess = 0.0f;
 
 private:
 	inline static std::shared_ptr<VertexArray> vao = nullptr;

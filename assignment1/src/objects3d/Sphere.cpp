@@ -48,13 +48,12 @@ void Sphere::onDraw(float dt) {
 	shader->setFloat("u_Light.ambientStrength", light->ambientStrength);
 
 	shader->setFloat4("u_Material.color", color);
-	shader->setFloat("u_Material.shininess", 0.0f); // isTriangles ? 1.0f : 0.0f
+	shader->setFloat("u_Material.shininess", shininess);
 
 	shader->setInt("ourTexture", 0);
 	shader->setInt("u_CubeMap", Renderer::getInfo().skybox_Text_slot);
 
 	
-
 	if (Renderer::textures && texture != nullptr)
 		texture->bind();
 	else

@@ -27,14 +27,11 @@ void Olaf::onCreate(SceneManager& manager)
 	head->setCamera(manager.camera);
 	head->setLight(manager.light);
 
-	// DEBUG shader
-	/*std::shared_ptr<Shader> debugShader = std::make_shared<Shader>("shaders/debug.glsl");
-	std::shared_ptr<Texture> debugTexture = std::make_shared<Texture>("shaders/world.png");
-	sphere = std::make_shared<Sphere>(glm::vec3{0, 1.5, 0});
-	sphere->setCamera(manager.getCamera())
-		.setShader(debugShader)
-		.setLight(manager.getLight())
-		.setTexture(debugTexture);*/
+	hat = std::make_shared<Object3D>("shaders/hat.obj");
+	hat->setShader(manager.shader);
+	hat->setCamera(manager.camera);
+	hat->setLight(manager.light);
+	
 
 	// Movement and rotation
 	constexpr float speed = 0.1;
@@ -100,6 +97,7 @@ void Olaf::onUpdate(float dt)
 	body->position = rootPos;
 	body->rotation = rotation;
 	body->scale = { rootScale.x, rootScale.y , rootScale.x};
+	body->shininess = shininess;
 	body->onDraw(dt);
 	
 	// Feet
@@ -122,6 +120,7 @@ void Olaf::onUpdate(float dt)
 	chest->rotation = rotation;
 	chest->setRotationOrigin(rootPos);
 	chest->scale = { chestScale.x, chestScale.y, chestScale.x};
+	chest->shininess = shininess;
 	chest->onDraw(dt);
 
 	// Head
@@ -133,6 +132,7 @@ void Olaf::onUpdate(float dt)
 	head->rotation = rotation;
 	head->setRotationOrigin(rootPos);
 	head->scale = { headScale.x, headScale.y, headScale.x };
+	head->shininess = shininess;
 	head->onDraw(dt);
 
 	// Nose
@@ -184,6 +184,14 @@ void Olaf::onUpdate(float dt)
 		armsPos.x -= chestScale.x * 2;
 		Renderer::drawCube(armsPos, rotation, rootPos, -armsScale);
 	}
+
+
+	hat->setPosition(headPos + glm::vec3{ 0, 0, headScale.z });
+	//hat->scale = { 0.5, 0.5, 0.5 };
+	hat->rotationOrigin = rootPos;
+	hat->rotation = rotation;
+	hat->onDraw(dt);
+	
 }
 
 void Olaf::onDestroyed()
