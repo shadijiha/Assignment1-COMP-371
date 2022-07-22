@@ -6,7 +6,7 @@
 
 
 struct Light {
-	glm::vec3 position = {1.7, 1.8, -2};
+	glm::vec3 position = {3.4, 1.8, 6.9};
 	glm::vec4 C_d = glm::vec4(1.0);
 	glm::vec4 C_a = glm::vec4(1.0);
 	glm::vec4 C_l = glm::vec4(1.0);
