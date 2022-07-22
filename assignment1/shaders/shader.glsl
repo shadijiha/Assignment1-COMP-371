@@ -102,7 +102,7 @@ void main()
     // For metal shininess
     if (u_Material.shininess > 0.1) {
         vec4 reflectedColor = texture(u_CubeMap, v_reflectedVector);
-        vec4 result = vec4(ambient + diffuse, 1.0) * texture(ourTexture, v_TexCoord) * u_Material.color;
+        vec4 result = vec4(ambient + diffuse, 1.0) * texture(ourTexture, v_TexCoord);
         a_Color = mix(vec4(lighting, 1.0), reflectedColor, u_Material.shininess);
     }   
 }
