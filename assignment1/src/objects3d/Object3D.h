@@ -13,7 +13,7 @@ public:
 
 	void onDraw(float dt);
 
-	void setShader(std::shared_ptr<Shader> shader) { this->shader = shader; }
+	static void setShader(std::shared_ptr<Shader> shader) { Object3D::shader = shader; }
 	void setCamera(std::shared_ptr<Camera> cam) { this->camera = cam; }
 	void setLight(const std::shared_ptr<Light>& light) { this->light = light; }
 	void setTexture(const std::shared_ptr<Texture>& texture) { this->texture = texture; }
@@ -33,7 +33,7 @@ private:
 	
 
 	std::shared_ptr<VertexArray> vao;
-	std::shared_ptr<Shader> shader = Renderer::shader;
+	inline static std::shared_ptr<Shader> shader = Renderer::shader;
 	std::shared_ptr<Camera> camera = Renderer::camera;
 	std::shared_ptr<Light> light = Renderer::light;
 	std::shared_ptr<Texture> texture = nullptr;

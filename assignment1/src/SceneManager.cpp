@@ -65,7 +65,7 @@ void SceneManager::run()
 
 		// Render scene to frameBuffer
 		const auto& info = Renderer::getInfo();
-
+		// Draw shadow map
 		{
 			shadows_shader->bind();
 			shadows_shader->setMat4("lightSpaceMatrix", light->getSpaceMatrix());
@@ -73,6 +73,8 @@ void SceneManager::run()
 			shadows_shader->setInt("shadowMap", 1);
 
 			Renderer::setDefaultShader(shadows_shader);
+			Object3D::setShader(shadows_shader);
+			Sphere::setShader(shadows_shader);
 
 			glViewport(0, 0, info.shadow_width, info.shadow_height);
 			glBindFramebuffer(GL_FRAMEBUFFER, info.shadow_frameBuffer);
@@ -83,8 +85,12 @@ void SceneManager::run()
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		}
 
+		// Draw scene
 		{
 			Renderer::setDefaultShader(shader);
+			Object3D::setShader(shader);
+			Sphere::setShader(shader);
+
 			shader->bind();
 			shader->setMat4("lightSpaceMatrix", light->getSpaceMatrix());
 			shader->setInt("diffuseTexture", 7);
@@ -129,7 +135,7 @@ void SceneManager::onCreate()
 	Renderer::setLight(light);
 
 	camera->setRotation({ 30.0f, 30.0f, 0 });
-	camera->setPosition({ -3, 4, 10 });
+	camera->setPosition({ -3, 8, 10 });
 	olaf.onCreate(*this);
 
 	constexpr float camSpeed = 0.08f;
@@ -251,6 +257,14 @@ void SceneManager::onUI() {
 	UI::drawTreeNode<Renderer>("Environment settings", [this]() {
 		UI::drawVec1Control<int>("Grid count ", Renderer::GridSize, 0, 100);
 
+		if (ImGui::Button("Reload shader")) {
+			auto s = std::make_shared<Shader>("shaders/shader.glsl");
+			shader = s;
+			Renderer::shader = s;
+			Sphere::setShader(s);
+			Object3D::setShader(s);
+		}
+
 		// Select menu to change Rendering mode
 		static std::string currentSelection = "Triangles";
 		UI::drawDropDown("Type", {
@@ -292,6 +306,12 @@ void SceneManager::onUI() {
 	});
 
 	ImGui::End();
+
+	ImGui::Begin("Shadow map");
+	auto& info = Renderer::getInfo();
+	ImGui::Image((ImTextureID)info.shadow_depth_map, { (float)info.shadow_width, (float)info.shadow_height}, ImVec2(0, 1), ImVec2(1, 0));
+	ImGui::End();
+
 
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

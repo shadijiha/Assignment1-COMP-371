@@ -31,8 +31,7 @@ void main()
 {
     v_CameraPos = u_Camera.position;
     v_TexCoord = a_TexCoord;
-    //v_Normal = transpose(inverse(mat3(u_Transform))) * a_Normal;
-    v_Normal = a_Normal;
+    v_Normal = transpose(inverse(mat3(u_Transform))) * a_Normal;
     v_FragPos = vec3(u_Transform * vec4(a_Position, 1.0));
     v_LightSpace = lightSpaceMatrix * vec4(v_FragPos, 1.0);
 
@@ -94,7 +93,7 @@ uniform int u_allowShadows;
 float ShadowCalculation(vec4 fragPosLightSpace);
 void main()
 {
-    vec3 color = texture(ourTexture, v_TexCoord).rgb * u_Material.color.xyz;
+    vec4 color = texture(ourTexture, v_TexCoord) * u_Material.color;
 
 	vec3 norm = normalize(v_Normal);
     vec3 lum_dir = normalize(v_lum_dir_out);
@@ -114,16 +113,16 @@ void main()
     vec3 specular = u_Light.k_s * spec * u_Light.C_l;  
 
     // calculate shadow
-    float shadow = u_allowShadows != 0 ? ShadowCalculation(v_LightSpace) : 0.3f;               
-    vec3 lighting = (ambiant  + (1.0 - shadow) * (diffuse + specular)) * color;  
+    float shadow = u_allowShadows != 0 ? ShadowCalculation(v_LightSpace) : 0.0f;               
+    vec4 lighting = vec4((ambiant  + (1.0 - shadow) * (diffuse + specular)), 1.0) * color;  
 
-    a_Color = vec4(lighting, 1.0);
+    a_Color = lighting;
 
     // For metal shininess
     if (u_Material.shininess > 0.1) {
         vec4 reflectedColor = texture(u_CubeMap, v_reflectedVector);
-        vec4 result = vec4(ambient + diffuse, 1.0) * texture(ourTexture, v_TexCoord);
-        a_Color = mix(vec4(lighting, 1.0), reflectedColor, u_Material.shininess);
+        vec4 result = vec4(ambiant + diffuse, 1.0) * texture(ourTexture, v_TexCoord);
+        a_Color = mix(lighting, reflectedColor, u_Material.shininess);
     }   
 }
 

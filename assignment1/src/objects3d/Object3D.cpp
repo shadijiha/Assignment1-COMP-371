@@ -138,7 +138,7 @@ void Object3D::onDraw(float dt)
 	shader->setFloat("u_Light.s", light->s);
 
 	shader->setFloat4("u_Material.color", color);
-	shader->setFloat("u_Material.shininess", 1.0f);
+	shader->setFloat("u_Material.shininess", Renderer::textures ? 1.0f : 0.0f);
 
 	shader->setInt("ourTexture", 0);
 	shader->setInt("u_CubeMap", Renderer::getInfo().skybox_Text_slot);

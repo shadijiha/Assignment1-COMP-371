@@ -13,24 +13,27 @@ void Olaf::onCreate(SceneManager& manager)
 	carrot = std::make_shared<Texture>("shaders/carrot.jpg");
 
 	body = std::make_shared<Sphere>();
-	body->setShader(manager.shader);
+	//body->setShader(manager.shader);
 	body->setCamera(manager.camera);
 	body->setLight(manager.light);
 
 	chest = std::make_shared<Sphere>();
-	chest->setShader(manager.shader);
+	//chest->setShader(manager.shader);
 	chest->setCamera(manager.camera);
 	chest->setLight(manager.light);
 
 	head = std::make_shared<Sphere>();
-	head->setShader(manager.shader);
+	//head->setShader(manager.shader);
 	head->setCamera(manager.camera);
 	head->setLight(manager.light);
 
 	hat = std::make_shared<Object3D>("shaders/hat.obj");
-	hat->setShader(manager.shader);
+	//hat->setShader(manager.shader);
 	hat->setCamera(manager.camera);
 	hat->setLight(manager.light);
+
+	Object3D::setShader(manager.shader);
+	Sphere::setShader(manager.shader);
 	
 
 	// Movement and rotation

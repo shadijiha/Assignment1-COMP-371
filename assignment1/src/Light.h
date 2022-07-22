@@ -18,10 +18,7 @@ struct Light {
 	float s = 0.5;
 
 	// These functions are used for shadows
-	inline glm::mat4 getProjection() {
-		float near_plane = 1.0f, far_plane = 7.5f;
-		return glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
-	}
+	glm::mat4 getProjection();
 
 	inline glm::mat4 getView() {
 		return glm::lookAt(position,
@@ -33,3 +30,5 @@ struct Light {
 		return getProjection() * getView();
 	}
 };
+
+

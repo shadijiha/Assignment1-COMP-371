@@ -67,86 +67,118 @@ void Sphere::onDraw(float dt) {
 		Renderer::whiteTexture->bind();
 
 	vao->bind();	
-	glDrawArrays(isTriangles ? GL_TRIANGLE_STRIP : Renderer::getGLRenderingMode(), 0, vao->getCount());
 
+
+	glDrawElements(Renderer::getGLRenderingMode(), vao->getCount(), GL_UNSIGNED_INT, nullptr);
 	//shader->setFloat4("u_Color", {0, 0, 0, 1});
 	//glDrawArrays(GL_LINE_LOOP, 0, vao->getCount());
 }
 
 int Sphere::init() {
 
+	constexpr float sectorCount = 100.0f, stackCount = 100.0f;
+	constexpr float radius = 0.65f;
+
 	std::vector<float> vertices;
 
-	constexpr int resolution = 500;
-	constexpr float r = 0.6f;
-	for (int i = 0; i <= resolution; i++) {
-		double lon = map(i, 0, resolution, -PI, PI);
-		double lon1 = map(i + 1, 0, resolution, -PI, PI);
+	float x, y, z, xy;                              // vertex position
+	float nx, ny, nz, lengthInv = 1.0f / radius;    // vertex normal
+	float s, t;                                     // vertex texCoord
 
-		for(int j = 0; j <= resolution; j++) {
-			double lat = map(j, 0, resolution, -PI * 2, PI * 2);
+	float sectorStep = 2 * PI / sectorCount;
+	float stackStep = PI / stackCount;
+	float sectorAngle, stackAngle;
 
-			double x = r * sin(lat) * cos(lon);
-			double y = r * sin(lat) * sin(lon);
-			double z = r * cos(lat);
+	for (int i = 0; i <= stackCount; ++i)
+	{
+		stackAngle = PI / 2 - i * stackStep;        // starting from pi/2 to -pi/2
+		xy = radius * cosf(stackAngle);             // r * cos(u)
+		z = radius * sinf(stackAngle);              // r * sin(u)
 
-			double x2 = r * sin(lat) * cos(lon1);
-			double y2 = r * sin(lat) * sin(lon1);
-			double z2 = r * cos(lat);
+		// add (sectorCount+1) vertices per stack
+		// the first and last vertices have same position and normal, but different tex coords
+		for (int j = 0; j <= sectorCount; ++j)
+		{
+			sectorAngle = j * sectorStep;           // starting from 0 to 2pi
 
-			// First vertex
+			// vertex position (x, y, z)
+			x = xy * cosf(sectorAngle);             // r * cos(u) * cos(v)
+			y = xy * sinf(sectorAngle);             // r * cos(u) * sin(v)
 			vertices.push_back(x);
 			vertices.push_back(y);
 			vertices.push_back(z);
 
-			// Normal
-			glm::vec3 normal = -glm::normalize(glm::cross(glm::vec3{ x, y, z }, {x2, y2, z2}));
+			// normalized vertex normal (nx, ny, nz)
+			nx = x * lengthInv;
+			ny = y * lengthInv;
+			nz = z * lengthInv;
+			vertices.push_back(nx);
+			vertices.push_back(ny);
+			vertices.push_back(nz);
 
-			//Texture UV
-			float u = asin(normal.x) / PI + 0.5;
-			float v = asin(normal.y) / PI + 0.5;
-			glm::vec2 uv = { u , v };
-
-
-			//std::cout << "u " << u << ", " << "v " << v << std::endl;
-
-			// Normal for second vertex
-			vertices.push_back(normal.x);
-			vertices.push_back(normal.y);
-			vertices.push_back(normal.z);
-
-			// Texture coords for 1st vertex
-			vertices.push_back(uv.x);
-			vertices.push_back(uv.y);
-
-			// Second vertex
-			vertices.push_back(x2);
-			vertices.push_back(y2);
-			vertices.push_back(z2);
-
-
-			// Normal for second vertex
-			vertices.push_back(normal.x);
-			vertices.push_back(normal.y);
-			vertices.push_back(normal.z);
-
-			// Texture coords for 2st vertex
-			vertices.push_back(uv.x);
-			vertices.push_back(uv.y);
+			// vertex tex coord (s, t) range between [0, 1]
+			s = (float)j / sectorCount;
+			t = (float)i / stackCount;
+			vertices.push_back(s);
+			vertices.push_back(t);
 		}
 	}
 
-	vao = VertexArray::create();
+	// generate CCW index list of sphere triangles
+	// k1--k1+1
+	// |  / |
+	// | /  |
+	// k2--k2+1
+	std::vector<uint32_t> indices;
+	std::vector<uint32_t> lineIndices;
+	int k1, k2;
+	for (int i = 0; i < stackCount; ++i)
+	{
+		k1 = i * (sectorCount + 1);     // beginning of current stack
+		k2 = k1 + sectorCount + 1;      // beginning of next stack
 
+		for (int j = 0; j < sectorCount; ++j, ++k1, ++k2)
+		{
+			// 2 triangles per sector excluding first and last stacks
+			// k1 => k2 => k1+1
+			if (i != 0)
+			{
+				indices.push_back(k1);
+				indices.push_back(k2);
+				indices.push_back(k1 + 1);
+			}
+
+			// k1+1 => k2 => k2+1
+			if (i != (stackCount - 1))
+			{
+				indices.push_back(k1 + 1);
+				indices.push_back(k2);
+				indices.push_back(k2 + 1);
+			}
+
+			// store indices for lines
+			// vertical lines for all stacks, k1 => k2
+			lineIndices.push_back(k1);
+			lineIndices.push_back(k2);
+			if (i != 0)  // horizontal lines except 1st stack, k1 => k+1
+			{
+				lineIndices.push_back(k1);
+				lineIndices.push_back(k1 + 1);
+			}
+		}
+	}
+
+
+	vao = VertexArray::create();
 	std::shared_ptr<VertexBuffer> buffer = std::make_shared<VertexBuffer>(vertices.data(), vertices.size() * sizeof(float));
 	buffer->setLayout({
 		{ShaderDataType::Float3, "a_Position"},
 		{ShaderDataType::Float3, "a_Normal"},
 		{ShaderDataType::Float2, "a_TexCoord"}
 	});
+	std::shared_ptr<IndexBuffer> ibo = std::make_shared<IndexBuffer>(indices.data(), indices.size());
 
 	vao->addVertexBuffer(buffer);
-	vao->setCount(vertices.size() / 3);
-
+	vao->setIndexBuffer(ibo);
 	return 0;
 }

@@ -19,7 +19,7 @@ public:
 
 	void onDraw(float dt);
 
-	void setShader(std::shared_ptr<Shader> shader) { this->shader = shader; }
+	static void setShader(std::shared_ptr<Shader>& shader) { Sphere::shader = shader; }
 	void setCamera(std::shared_ptr<Camera> cam) { this->camera = cam; }
 	void setRotationOrigin(const glm::vec3& rotaionOrigin) {
 		this->rotationOrigin = rotaionOrigin;
@@ -41,7 +41,7 @@ public:
 
 private:
 	inline static std::shared_ptr<VertexArray> vao = nullptr;
-	std::shared_ptr<Shader> shader = nullptr;
+	inline static std::shared_ptr<Shader> shader = nullptr;
 	std::shared_ptr<Camera> camera = nullptr;
 	std::shared_ptr<Light> light = nullptr;
 	std::shared_ptr<Texture> texture = nullptr;

@@ -82,9 +82,6 @@ void Renderer::drawCube(const glm::mat4& transform, const glm::vec4& color, Shad
 	else
 		Renderer::whiteTexture->bind();
 
-
-
-
 	info.cube_vao->bind();
 	glDrawArrays(getGLRenderingMode(mode), 0, info.cube_vao->getCount());
 }
@@ -129,6 +126,9 @@ void Renderer::drawGrid()
 	Renderer::drawCube({ lineLength / 2, 0, 0 }, { 0, 0, 0 }, {0, 0, 0}, { lineLength, 0.02, 0.02 }, { 1, 0, 0, 1 });
 	Renderer::drawCube({ 0, lineLength / 2, 0 }, { 0, 0, 0 }, { 0, 0, 0 }, { 0.02, lineLength, 0.02 }, { 0, 1, 0, 1 });
 	Renderer::drawCube({ 0, 0, lineLength / 2}, { 0, 0, 0 }, { 0, 0, 0 } , { 0.02, 0.02, lineLength }, { 0, 0, 1, 1 });
+
+	// Draw debug light cube
+	Renderer::drawCube(light->position, ZERO, ZERO, ONE * 0.5f, {0.7, 1.0, 0.3, 1.0});
 }
 
 void Renderer::drawSkyBox() {
