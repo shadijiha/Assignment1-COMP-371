@@ -15,6 +15,7 @@ struct Camera   {
 uniform Camera u_Camera;
 uniform mat4 u_Transform;
 uniform mat4 lightSpaceMatrix;
+uniform vec3 u_LightPos;
 
 out vec3 v_Normal;
 out vec3 v_FragPos; // for the light
@@ -23,13 +24,20 @@ out vec3 v_reflectedVector;
 out vec4 v_LightSpace;
 out vec3 v_CameraPos;
 
+out vec3 v_lum_dir_out;
+out vec3 v_cam_dir_out;
+
 void main()
 {
     v_CameraPos = u_Camera.position;
     v_TexCoord = a_TexCoord;
-    v_Normal = transpose(inverse(mat3(u_Transform))) * a_Normal;
+    //v_Normal = transpose(inverse(mat3(u_Transform))) * a_Normal;
+    v_Normal = a_Normal;
     v_FragPos = vec3(u_Transform * vec4(a_Position, 1.0));
     v_LightSpace = lightSpaceMatrix * vec4(v_FragPos, 1.0);
+
+    v_lum_dir_out = u_LightPos - a_Position;
+    v_cam_dir_out = u_Camera.position - a_Position;
 
     gl_Position = u_Camera.viewProjection * u_Transform * vec4(a_Position, 1.0);
     gl_PointSize = 7.0;
@@ -50,13 +58,25 @@ in vec3 v_reflectedVector;
 in vec4 v_LightSpace;
 in vec3 v_CameraPos;
 
+in vec3 v_lum_dir_out;
+in vec3 v_cam_dir_out;
+
 uniform sampler2D ourTexture;
 uniform samplerCube u_CubeMap;
 
 struct Light {
     vec3 position;
-    vec4 color;
-    float ambientStrength;
+
+	// Couleur de la lumiere
+	vec3 C_d;
+	vec3 C_a;
+	vec3 C_l;
+
+	// Composante de Phong
+	float k_d;
+	float k_a;
+	float k_s;
+	float s;
 };
 
 struct Material {
@@ -76,26 +96,26 @@ void main()
 {
     vec3 color = texture(ourTexture, v_TexCoord).rgb * u_Material.color.xyz;
 
-    vec3 lightColor = u_Light.color.xyz;
-    vec3 ambient = u_Light.ambientStrength * lightColor;
+	vec3 norm = normalize(v_Normal);
+    vec3 lum_dir = normalize(v_lum_dir_out);
+    vec3 cam_dir = normalize(v_cam_dir_out);
+    vec3 reflect_dir = reflect(-lum_dir, norm);
 
-    // Diffuse lighting
-    vec3 norm = normalize(v_Normal);
-    vec3 lightDir = normalize(u_Light.position - v_FragPos);
-    float diff = max(dot(lightDir, norm), 0.0);
-    vec3 diffuse = diff * lightColor;
+    // Lumiere ambiante
+    float amb = u_Light.k_a;
+    vec3 ambiant = amb * u_Light.C_a;
 
-    // specular lighting
-    vec3 viewDir = normalize(v_CameraPos - v_FragPos);
-    vec3 reflectDir = reflect(-lightDir, norm);
-    float spec = 0.0;
-    vec3 halfwayDir = normalize(lightDir + viewDir);  
-    spec = pow(max(dot(norm, halfwayDir), 0.0), 64.0);
-    vec3 specular = spec * lightColor;    
+    // Lumiere diffuse
+    float diff = u_Light.k_d * max(dot(norm, lum_dir), 0.0);
+    vec3 diffuse = diff * u_Light.C_d;
+
+    // Lumiere speculaire
+    float spec = pow(max(dot(cam_dir, reflect_dir), 0.0), u_Light.s);
+    vec3 specular = u_Light.k_s * spec * u_Light.C_l;  
 
     // calculate shadow
     float shadow = u_allowShadows != 0 ? ShadowCalculation(v_LightSpace) : 0.3f;               
-    vec3 lighting = (ambient + (1.0 - shadow) * (diffuse + specular)) * color;  
+    vec3 lighting = (ambiant  + (1.0 - shadow) * (diffuse + specular)) * color;  
 
     a_Color = vec4(lighting, 1.0);
 
