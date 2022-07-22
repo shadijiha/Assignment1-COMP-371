@@ -59,10 +59,18 @@ void Renderer::drawCube(const glm::mat4& transform, const glm::vec4& color, Shad
 	shader.setMat4("u_Camera.viewProjection", camera->getViewProjection());
 
 	shader.setMat4("u_Transform", transform);
+	shader.setFloat3("u_LightPos", light->position);
 
 	shader.setFloat3("u_Light.position", light->position);
-	shader.setFloat4("u_Light.color", light->color);
-	shader.setFloat("u_Light.ambientStrength", light->ambientStrength);
+
+	shader.setFloat3("u_Light.C_d", light->C_d);
+	shader.setFloat3("u_Light.C_a", light->C_a);
+	shader.setFloat3("u_Light.C_l", light->C_l);
+
+	shader.setFloat("u_Light.k_d", light->k_d);
+	shader.setFloat("u_Light.k_a", light->k_a);
+	shader.setFloat("u_Light.k_s", light->k_s);
+	shader.setFloat("u_Light.s", light->s);
 
 	shader.setInt("ourTexture", 0);
 

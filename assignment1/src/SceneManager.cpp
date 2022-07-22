@@ -275,8 +275,13 @@ void SceneManager::onUI() {
 	// Light settings
 	UI::drawTreeNode<Light>("Light settings", [this]() {
 		UI::drawVec3Control("position", light->position);
-		UI::drawColorControl("colour", light->color);
-		UI::drawVec1Control("ambiant strength", light->ambientStrength);
+		UI::drawColorControl("C_d", light->C_d);
+		UI::drawColorControl("C_a", light->C_a);
+		UI::drawColorControl("C_l", light->C_l);
+		UI::drawVec1Control("k_d", light->k_d);
+		UI::drawVec1Control("k_a", light->k_a);
+		UI::drawVec1Control("k_s", light->k_s);
+		UI::drawVec1Control("s", light->s);
 	});
 
 	// hat settings
