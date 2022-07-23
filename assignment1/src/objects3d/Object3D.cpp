@@ -115,7 +115,7 @@ void Object3D::onDraw(float dt)
 		* glm::rotate(glm::mat4(1.0), glm::radians(rotation.z), { 0, 0, 1 })
 		* glm::translate(glm::mat4(1.0f), -rotationOrigin)
 		* glm::translate(glm::mat4(1.0), position)
-		* glm::scale(scale);
+		* glm::scale(glm::mat4(1.0), scale);
 
 	Renderer::getCubeMapTexture()->bind(Renderer::getInfo().skybox_Text_slot);
 

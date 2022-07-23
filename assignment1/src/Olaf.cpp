@@ -2,6 +2,7 @@
 #include <glm/gtx/transform.hpp>
 #include "Renderer.h"
 #include "SceneManager.h"
+#include "util/TransformBuilder.h"
 
 Olaf::Olaf()
 {
@@ -10,6 +11,8 @@ Olaf::Olaf()
 
 void Olaf::onCreate(SceneManager& manager)
 {
+	scene = &manager;
+
 	carrot = std::make_shared<Texture>("shaders/carrot.jpg");
 
 	body = std::make_shared<Sphere>();
@@ -41,6 +44,7 @@ void Olaf::onCreate(SceneManager& manager)
 	manager.addKeyEvent(GLFW_KEY_D, [this, speed](SceneManager& scene, WindowUserData& data, KeyAction action) {
 		if (scene.isShiftPressed()) {
 			this->position.x += speed;
+			scene.playAnimation = true;
 		}
 		else
 		{
@@ -51,6 +55,7 @@ void Olaf::onCreate(SceneManager& manager)
 	manager.addKeyEvent(GLFW_KEY_A, [this, speed](SceneManager& scene, WindowUserData& data, KeyAction action) {
 		if (scene.isShiftPressed()) {
 			this->position.x -= speed;
+			scene.playAnimation = true;
 		}
 		else
 		{
@@ -60,11 +65,13 @@ void Olaf::onCreate(SceneManager& manager)
 
 	manager.addKeyEvent(GLFW_KEY_W, [this, speed](SceneManager& scene, WindowUserData& data, KeyAction action) {
 		if (scene.isShiftPressed()) {
+			scene.playAnimation = true;
 			this->position.z -= speed;
 		}
 	});
 	manager.addKeyEvent(GLFW_KEY_S, [this, speed](SceneManager& scene, WindowUserData& data, KeyAction action) {
 		if (scene.isShiftPressed()) {
+			scene.playAnimation = true;
 			this->position.z += speed;
 		}
 	});
@@ -88,8 +95,14 @@ void Olaf::onCreate(SceneManager& manager)
 	});
 }
 
+static float sinAnim(float dt);
+static float cosAnim(float dt);
+
 void Olaf::onUpdate(float dt)
 {
+	static float frames = 0.0f;
+	frames += dt;
+
 	glm::vec3 rootPos = position;
 	glm::vec3 rootScale = glm::vec3{ 3, 3, 1 } * scale;
 	glm::vec3 feetScale = glm::vec3{ 1, 1, 1 } * scale;
@@ -108,8 +121,15 @@ void Olaf::onUpdate(float dt)
 		glm::vec3 feetPos = rootPos;
 		feetPos.y -= rootScale.y / 2 + feetScale.y / 2;
 		feetPos.x += rootScale.x * 0.25;
-		Renderer::drawCube(feetPos, rotation, rootPos , feetScale);
+
+		if (scene->playAnimation)
+			feetPos = { feetPos.x + sinAnim(frames) / 8, feetPos.y, feetPos.z + cosAnim(frames) / 8 };
+		
+		Renderer::drawCube(feetPos, rotation, rootPos, feetScale);
 		feetPos.x -= rootScale.x * 0.5;
+
+		if (scene->playAnimation)
+			feetPos = { feetPos.x - sinAnim(frames) / 8, feetPos.y, feetPos.z + cosAnim(frames) / 8 };
 		Renderer::drawCube(feetPos, rotation, rootPos, feetScale);
 	}
 
@@ -181,15 +201,17 @@ void Olaf::onUpdate(float dt)
 		glm::vec3 armsPos = chestPos;
 		armsPos.x += chestScale.x;
 		glm::vec3 armsScale = glm::vec3{ 3, 0.5, .6 } *scale;
-
-		Renderer::drawCube(armsPos, rotation, rootPos, armsScale);
+		
+		Renderer::drawCube(armsPos, 
+			!scene->playAnimation ? rotation : glm::vec3{ rotation.x, rotation.y, rotation.z + sinAnim(frames) * 15.0f },
+			rootPos, armsScale);
 
 		armsPos.x -= chestScale.x * 2;
 		Renderer::drawCube(armsPos, rotation, rootPos, -armsScale);
 	}
 
 
-	hat->setPosition(headPos + glm::vec3{ 0, 0, headScale.z });
+	hat->setPosition(headPos + glm::vec3{ 0, 0.5, headScale.z - 0.6 });
 	//hat->scale = { 0.5, 0.5, 0.5 };
 	hat->rotationOrigin = rootPos;
 	hat->rotation = rotation;
@@ -205,4 +227,12 @@ void Olaf::randomPosition() {
 	const int half = Renderer::GridSize / 2;
 	this->position = { rand() % Renderer::GridSize - half,
 			0, rand() % Renderer::GridSize - half };
+}
+
+static float sinAnim(float dt) {
+	return sin(dt);
+}
+
+static float cosAnim(float dt) {
+	return cos(dt);
 }

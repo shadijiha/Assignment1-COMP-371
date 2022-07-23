@@ -242,6 +242,8 @@ void SceneManager::onUI() {
 
 		if (ImGui::Button("random position"))
 			olaf.randomPosition();
+
+		ImGui::Checkbox("Animate", &playAnimation);
 	});
 
 	// Camera settings
@@ -307,7 +309,7 @@ void SceneManager::onUI() {
 
 	ImGui::End();
 
-	ImGui::Begin("Shadow map");
+	ImGui::Begin("Shadow map (DEBUG window)");
 	auto& info = Renderer::getInfo();
 	ImGui::Image((ImTextureID)info.shadow_depth_map, { (float)info.shadow_width, (float)info.shadow_height}, ImVec2(0, 1), ImVec2(1, 0));
 	ImGui::End();
@@ -388,6 +390,9 @@ void SceneManager::listenToEvents(GLFWwindow* window) {
 				break;
 			}
 		}
+
+		if (action == KeyAction::RELEASE)
+			data->sceneManager->playAnimation = false;
 	});
 }
 

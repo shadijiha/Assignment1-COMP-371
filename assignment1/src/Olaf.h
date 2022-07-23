@@ -33,5 +33,7 @@ private:
 	std::shared_ptr<Sphere> body;
 	std::shared_ptr<Object3D> hat;
 
+	SceneManager* scene;	// This shoudn't be here but whatever
+
 	friend class SceneManager;
 };

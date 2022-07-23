@@ -58,6 +58,7 @@ private:
 
 	uint32_t width, height;
 	bool allowShadows = true;
+	bool playAnimation = false;
 
 	float lastDt = 0.0f;
 
